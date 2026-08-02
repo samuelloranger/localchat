@@ -25,7 +25,9 @@ function mapModel(row: ModelRow): InstalledModel {
     filename: row.filename,
     displayName: row.display_name,
     sizeBytes: row.size_bytes,
-    localPath: row.local_path,
+    // Callers need somewhere to read from, so hand out a resolved absolute
+    // path. The stored value stays relative — see resolveModelPath.
+    localPath: resolveModelPath(row.local_path),
     downloadedAt: row.downloaded_at,
     lastUsedAt: row.last_used_at,
   }
@@ -48,9 +50,37 @@ export function modelsDirectory(): string {
   return `${base}../models/`
 }
 
+/** Stable, filesystem-safe file name for a model. Never contains a directory. */
+export function modelFileName(modelId: string): string {
+  return `${modelId.replace(/[^a-zA-Z0-9._-]+/g, '__')}.gguf`
+}
+
 export function modelFilePath(modelId: string): string {
-  const safe = modelId.replace(/[^a-zA-Z0-9._-]+/g, '__')
-  return `${modelsDirectory()}${safe}.gguf`
+  return `${modelsDirectory()}${modelFileName(modelId)}`
+}
+
+/**
+ * Turn whatever is in models.local_path into a path that is valid right now.
+ *
+ * iOS app containers are addressed as
+ * /var/mobile/Containers/Data/Application/<UUID>/… and that UUID is
+ * regenerated on app update even though the data inside is preserved. An
+ * absolute path written before an update therefore points nowhere afterwards —
+ * which, combined with the prune in listInstalled, deleted every installed
+ * model on the first launch after each release.
+ *
+ * So only the file name is persisted, and the directory is resolved at read
+ * time. Rows written by older builds still hold an absolute path; those are
+ * recognised here and reduced to their file name.
+ */
+export function resolveModelPath(stored: string): string {
+  const name = stored.split('/').pop() ?? stored
+  return `${modelsDirectory()}${name}`
+}
+
+/** True for a legacy row that still holds a full path. */
+export function isLegacyAbsolutePath(stored: string): boolean {
+  return stored.includes('/')
 }
 
 export async function listInstalled(db: SQLiteDatabase): Promise<InstalledModel[]> {
@@ -61,12 +91,24 @@ export async function listInstalled(db: SQLiteDatabase): Promise<InstalledModel[
   )
   const installed: InstalledModel[] = []
   for (const row of rows) {
-    const info = await FileSystem.getInfoAsync(row.local_path)
-    if (info.exists) {
-      installed.push(mapModel(row))
-    } else {
+    const resolved = resolveModelPath(row.local_path)
+    const info = await FileSystem.getInfoAsync(resolved)
+
+    if (!info.exists) {
+      // The file is genuinely gone — not merely addressed by a stale container
+      // path, since `resolved` is always rebuilt against the current directory.
       await db.runAsync(`DELETE FROM models WHERE id = ?`, row.id)
+      continue
     }
+
+    // Heal rows written before paths were stored relative, so the rewrite
+    // happens once instead of on every read.
+    if (isLegacyAbsolutePath(row.local_path)) {
+      const name = row.local_path.split('/').pop() ?? row.local_path
+      await db.runAsync(`UPDATE models SET local_path = ? WHERE id = ?`, name, row.id)
+    }
+
+    installed.push(mapModel(row))
   }
   return installed
 }
@@ -84,7 +126,10 @@ export async function recordInstalled(
     model.filename,
     model.displayName,
     model.sizeBytes,
-    model.localPath,
+    // Store the file name only. InstalledModel.localPath is absolute because
+    // callers need to read the file, but an absolute path in the database goes
+    // stale the next time iOS rebuilds the container path.
+    model.localPath.split('/').pop() ?? model.localPath,
     model.downloadedAt,
     model.lastUsedAt,
   )
@@ -101,9 +146,10 @@ export async function removeInstalled(db: SQLiteDatabase, id: string): Promise<v
     id,
   )
   if (row) {
-    await FileSystem.deleteAsync(row.local_path, { idempotent: true })
-    await FileSystem.deleteAsync(`${row.local_path}.partial`, { idempotent: true })
-    await FileSystem.deleteAsync(`${row.local_path}.resume.json`, { idempotent: true })
+    const resolved = resolveModelPath(row.local_path)
+    await FileSystem.deleteAsync(resolved, { idempotent: true })
+    await FileSystem.deleteAsync(`${resolved}.partial`, { idempotent: true })
+    await FileSystem.deleteAsync(`${resolved}.resume.json`, { idempotent: true })
   }
   await db.runAsync(`DELETE FROM models WHERE id = ?`, id)
 }

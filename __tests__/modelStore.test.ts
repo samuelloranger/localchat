@@ -77,3 +77,86 @@ test('modelsDirectory on iOS uses Application Support', () => {
 test('modelFilePath nests under modelsDirectory', () => {
   expect(modelStore.modelFilePath('a/b/c.gguf')).toContain('Application Support/LocalChat/models/')
 })
+
+// Regression: local_path used to be persisted as an absolute path. iOS
+// regenerates the container UUID in
+// /var/mobile/Containers/Data/Application/<UUID>/… on every app update while
+// keeping the data, so the stored path pointed nowhere afterwards — and
+// listInstalled's prune then deleted every model row on the first launch after
+// each release.
+test('survives the container path changing between app updates', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+  mockGetInfoAsync.mockResolvedValue({ exists: true })
+
+  await modelStore.recordInstalled(db, {
+    id: 'org/repo/model.gguf',
+    repoId: 'org/repo',
+    filename: 'model.gguf',
+    displayName: 'org/repo/model.gguf',
+    sizeBytes: 10,
+    localPath: modelStore.modelFilePath('org/repo/model.gguf'),
+    downloadedAt: 1,
+    lastUsedAt: null,
+  })
+
+  // Only the file name reaches the database — nothing container-specific.
+  const stored = await db.getFirstAsync<{ local_path: string }>(
+    'SELECT local_path FROM models LIMIT 1',
+  )
+  expect(stored?.local_path).not.toContain('/')
+
+  const list = await modelStore.listInstalled(db)
+  expect(list).toHaveLength(1)
+  expect(list[0].localPath).toBe(modelStore.modelFilePath('org/repo/model.gguf'))
+})
+
+test('heals a legacy row that still holds an absolute path', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+  mockGetInfoAsync.mockResolvedValue({ exists: true })
+
+  const name = modelStore.modelFileName('org/repo/model.gguf')
+  await db.runAsync(
+    `INSERT INTO models
+       (id, repo_id, filename, display_name, size_bytes, local_path, downloaded_at, last_used_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    'org/repo/model.gguf',
+    'org/repo',
+    'model.gguf',
+    'org/repo/model.gguf',
+    10,
+    `file:///var/mobile/Containers/Data/Application/OLD-UUID/Library/Application Support/LocalChat/models/${name}`,
+    1,
+    null,
+  )
+
+  const list = await modelStore.listInstalled(db)
+  expect(list).toHaveLength(1)
+  expect(list[0].localPath).toBe(modelStore.modelFilePath('org/repo/model.gguf'))
+
+  // Rewritten once, not on every read.
+  const healed = await db.getFirstAsync<{ local_path: string }>(
+    'SELECT local_path FROM models LIMIT 1',
+  )
+  expect(healed?.local_path).toBe(name)
+})
+
+test('a file that is really gone is still pruned', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+  mockGetInfoAsync.mockResolvedValue({ exists: false })
+
+  await modelStore.recordInstalled(db, {
+    id: 'org/repo/gone.gguf',
+    repoId: 'org/repo',
+    filename: 'gone.gguf',
+    displayName: 'org/repo/gone.gguf',
+    sizeBytes: 10,
+    localPath: modelStore.modelFilePath('org/repo/gone.gguf'),
+    downloadedAt: 1,
+    lastUsedAt: null,
+  })
+
+  expect(await modelStore.listInstalled(db)).toHaveLength(0)
+})
