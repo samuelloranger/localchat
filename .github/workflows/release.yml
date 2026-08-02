@@ -97,6 +97,13 @@ jobs:
       - name: Install deps
         run: bun install --frozen-lockfile
 
+      # bun install does not always run llama.rn's postinstall on CI, and without
+      # ios/rnllama.xcframework the archive fails with `rnllama/rn-llama.h` missing.
+      - name: Download llama.rn native artifacts
+        run: |
+          node node_modules/llama.rn/install/download-native-artifacts.js
+          test -d node_modules/llama.rn/ios/rnllama.xcframework
+
       - name: Pin app version to the release tag
         if: github.event_name == 'push'
         run: |
