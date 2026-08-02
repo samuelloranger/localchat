@@ -79,6 +79,8 @@ const fr = {
     dismiss: 'Fermer',
     userMessage: 'Votre message',
     assistantMessage: 'Réponse de l’assistant',
+    emptyLead: 'Demande ce que tu veux. Rien ne quitte ce téléphone.',
+    emptyNote: "%{name} est chargé et répond sur l'appareil. Aucun compte, aucun réseau.",
     copy: 'Copié',
   },
   settings: {

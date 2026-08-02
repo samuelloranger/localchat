@@ -76,6 +76,8 @@ const en = {
     dismiss: 'Dismiss',
     userMessage: 'Your message',
     assistantMessage: 'Assistant reply',
+    emptyLead: 'Ask anything. Nothing leaves this phone.',
+    emptyNote: '%{name} is loaded and answers on-device. No account, no network.',
     copy: 'Copied',
   },
   settings: {

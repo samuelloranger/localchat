@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ArrowUp, Square } from 'lucide-react-native'
+import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 
 import { useTheme } from '@/src/theme/ThemeProvider'
 import { typography } from '@/src/theme/typography'
@@ -28,6 +29,7 @@ export function Composer({
 }: Props) {
   const { colors } = useTheme()
   const inputDisabled = disabled && !streaming
+  const sendDisabled = disabled || !value.trim()
 
   return (
     <View
@@ -59,32 +61,29 @@ export function Composer({
           accessibilityRole="button"
           accessibilityLabel={stopLabel}
           onPress={onStop}
-          style={[styles.btn, { backgroundColor: colors.destructive, minHeight: 44, minWidth: 44 }]}
+          style={({ pressed }) => [
+            styles.action,
+            { backgroundColor: colors.destructive, opacity: pressed ? 0.85 : 1 },
+          ]}
         >
-          <Text style={{ color: colors.onPrimary, fontFamily: typography.bodySemiBoldFamily }}>
-            {stopLabel}
-          </Text>
+          <Square size={16} color={colors.onPrimary} fill={colors.onPrimary} />
         </Pressable>
       ) : (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={sendLabel}
-          accessibilityState={{ disabled: disabled || !value.trim() }}
-          disabled={disabled || !value.trim()}
+          accessibilityState={{ disabled: sendDisabled }}
+          disabled={sendDisabled}
           onPress={onSend}
-          style={[
-            styles.btn,
+          style={({ pressed }) => [
+            styles.action,
             {
               backgroundColor: colors.primary,
-              opacity: disabled || !value.trim() ? 0.4 : 1,
-              minHeight: 44,
-              minWidth: 44,
+              opacity: sendDisabled ? 0.35 : pressed ? 0.85 : 1,
             },
           ]}
         >
-          <Text style={{ color: colors.onPrimary, fontFamily: typography.bodySemiBoldFamily }}>
-            {sendLabel}
-          </Text>
+          <ArrowUp size={20} color={colors.onPrimary} strokeWidth={2.5} />
         </Pressable>
       )}
     </View>
@@ -108,10 +107,13 @@ const styles = StyleSheet.create({
     maxHeight: 120,
     fontSize: 16,
   },
-  btn: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+  // A circle, not a labelled button: "Envoyer" truncated at narrow widths and
+  // its hit box drifted below 44pt. A glyph is legible in both locales and the
+  // shape stays a fixed, comfortable target.
+  action: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },

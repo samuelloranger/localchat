@@ -61,7 +61,7 @@ export async function unloadModel(): Promise<void> {
 export async function completeChat(params: {
   messages: { role: MessageRole; content: string }[]
   onToken: (token: string) => void
-}): Promise<{ text: string }> {
+}): Promise<{ text: string; tokensPerSecond: number | null }> {
   if (!ctx) throw new Error('NO_MODEL_LOADED')
   const result = await ctx.completion(
     {
@@ -74,7 +74,13 @@ export async function completeChat(params: {
       params.onToken(data.token)
     },
   )
-  return { text: result.content || result.text }
+  // Only a local runtime can report this; it is what the provenance line under
+  // each reply is built from.
+  const rate = result.timings?.predicted_per_second
+  return {
+    text: result.content || result.text,
+    tokensPerSecond: typeof rate === 'number' && Number.isFinite(rate) ? rate : null,
+  }
 }
 
 export async function stop(): Promise<void> {

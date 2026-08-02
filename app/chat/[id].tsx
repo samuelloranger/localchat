@@ -24,6 +24,7 @@ import { useTheme } from '@/src/theme/ThemeProvider'
 import { typography } from '@/src/theme/typography'
 
 import { buildContext } from '@/src/chat/buildContext'
+import { formatModelLabel, formatProvenance } from '@/src/chat/modelLabel'
 import { useDeviceRam } from '@/src/hooks/useDeviceRam'
 
 const UI_FLUSH_MS = 50
@@ -37,6 +38,7 @@ type RunCompletionParams = {
   mountedRef: React.RefObject<boolean>
   streamingBufferRef: React.MutableRefObject<string>
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  onSpeed: (tokensPerSecond: number | null) => void
 }
 
 async function runCompletion({
@@ -47,6 +49,7 @@ async function runCompletion({
   mountedRef,
   streamingBufferRef,
   setMessages,
+  onSpeed,
 }: RunCompletionParams): Promise<void> {
   await inference.loadModel(model.localPath)
   await touchLastUsed(db, model.id)
@@ -70,7 +73,7 @@ async function runCompletion({
   }
 
   try {
-    const { text: finalText } = await inference.completeChat({
+    const { text: finalText, tokensPerSecond } = await inference.completeChat({
       messages: context,
       onToken: (token) => {
         buffer += token
@@ -88,6 +91,7 @@ async function runCompletion({
     })
 
     const content = finalText || buffer
+    onSpeed(tokensPerSecond)
     await chatStore.updateMessage(db, assistantId, { content, status: 'complete' })
     if (mountedRef.current) {
       setMessages((prev) =>
@@ -120,6 +124,9 @@ export default function ChatScreen() {
   const [streaming, setStreaming] = useState(false)
   const [infoBanner, setInfoBanner] = useState<string | null>(null)
   const [overBudgetDismissed, setOverBudgetDismissed] = useState(false)
+  // Speed is per generated turn and only known for turns produced in this
+  // session; older replies still show the model name, just without a rate.
+  const [speedById, setSpeedById] = useState<Record<string, number | null>>({})
   const listRef = useRef<FlatList<Message>>(null)
   const mountedRef = useRef(true)
   const streamingBufferRef = useRef('')
@@ -152,38 +159,57 @@ export default function ChatScreen() {
   )
 
   const hasInstalledModel = !!activeModel
+
+  // Identity is stated once, on the conversation's opening reply.
+  const firstReplyId = useMemo(
+    () => messages.find((m) => m.role === 'assistant')?.id ?? null,
+    [messages],
+  )
   const showOverBudgetBanner = !!modelFit && !modelFit.fits && !overBudgetDismissed
 
+  const modelLabel = activeModel ? formatModelLabel(activeModel.displayName) : t('chat.noModel')
+
+  const cycleModel = useCallback(() => {
+    if (!conversation || installed.length < 2) return
+    const idx = installed.findIndex((m) => m.id === conversation.modelId)
+    const next = installed[(idx + 1) % installed.length]
+    void chatStore.setConversationModel(db, conversation.id, next.id).then(async () => {
+      setInfoBanner(t('chat.modelSwitch', { name: formatModelLabel(next.displayName) }))
+      setOverBudgetDismissed(false)
+      await reload()
+    })
+  }, [conversation, installed, db, t, reload])
+
+  // The header carries two facts with different weights: what this conversation
+  // is (title, in the display face) and which model is answering (secondary,
+  // and the control that changes it). Stacking them keeps the model name
+  // readable instead of truncating it into a headerRight sliver.
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: conversation?.title ?? t('chats.new'),
-      headerRight: () => (
+      headerTitleAlign: 'center',
+      headerTitle: () => (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={activeModel?.displayName ?? t('chat.noModel')}
-          accessibilityHint={t('chat.modelSwitchHint')}
-          onPress={() => {
-            if (!conversation || installed.length < 2) return
-            const idx = installed.findIndex((m) => m.id === conversation.modelId)
-            const next = installed[(idx + 1) % installed.length]
-            void chatStore.setConversationModel(db, conversation.id, next.id).then(async () => {
-              setInfoBanner(t('chat.modelSwitch', { name: next.displayName }))
-              setOverBudgetDismissed(false)
-              await reload()
-            })
-          }}
-          style={{ paddingHorizontal: 12, minHeight: 44, justifyContent: 'center' }}
+          accessibilityLabel={modelLabel}
+          accessibilityHint={installed.length > 1 ? t('chat.modelSwitchHint') : undefined}
+          disabled={installed.length < 2}
+          onPress={cycleModel}
+          style={styles.headerTitle}
         >
           <Text
-            style={{ color: colors.primary, fontFamily: typography.bodyMediumFamily }}
             numberOfLines={1}
+            style={[styles.headerName, { color: colors.foreground }]}
           >
-            {activeModel?.displayName ?? t('chat.noModel')}
+            {conversation?.title ?? t('chats.new')}
+          </Text>
+          <Text numberOfLines={1} style={[styles.headerModel, { color: colors.mutedForeground }]}>
+            {modelLabel}
           </Text>
         </Pressable>
       ),
+      headerRight: undefined,
     })
-  }, [navigation, conversation, installed, colors.primary, db, reload, t, activeModel])
+  }, [navigation, conversation, installed.length, colors, t, modelLabel, cycleModel])
 
   useFocusEffect(
     useCallback(() => {
@@ -263,6 +289,7 @@ export default function ChatScreen() {
       mountedRef,
       streamingBufferRef,
       setMessages,
+      onSpeed: (rate) => setSpeedById((prev) => ({ ...prev, [assistant.id]: rate })),
     })
 
     streamingIdRef.current = null
@@ -289,6 +316,7 @@ export default function ChatScreen() {
       mountedRef,
       streamingBufferRef,
       setMessages,
+      onSpeed: (rate) => setSpeedById((prev) => ({ ...prev, [assistantId]: rate })),
     })
 
     streamingIdRef.current = null
@@ -342,7 +370,20 @@ export default function ChatScreen() {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         renderItem={({ item }) => (
           <View>
-            <MessageBubble role={item.role} content={item.content} status={item.status} />
+            <MessageBubble
+              role={item.role}
+              content={item.content}
+              status={item.status}
+              provenance={
+                item.role === 'assistant' && item.status === 'complete' && activeModel
+                  ? (formatProvenance(
+                      modelLabel,
+                      speedById[item.id],
+                      item.id === firstReplyId,
+                    ) ?? undefined)
+                  : undefined
+              }
+            />
             {item.status === 'error' ? (
               <Pressable
                 accessibilityRole="button"
@@ -358,17 +399,16 @@ export default function ChatScreen() {
           </View>
         )}
         ListEmptyComponent={
-          !hasInstalledModel ? (
-            <Text
-              style={{
-                padding: 16,
-                color: colors.mutedForeground,
-                fontFamily: typography.bodyFamily,
-              }}
-            >
-              {t('chat.noModelInstalled')}
+          <View style={styles.empty}>
+            <Text style={[styles.emptyLead, { color: colors.foreground }]}>
+              {hasInstalledModel ? t('chat.emptyLead') : t('chat.noModelInstalled')}
             </Text>
-          ) : null
+            {hasInstalledModel ? (
+              <Text style={[styles.emptyNote, { color: colors.mutedForeground }]}>
+                {t('chat.emptyNote', { name: modelLabel })}
+              </Text>
+            ) : null}
+          </View>
         }
       />
       <Composer
@@ -388,6 +428,28 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  headerTitle: { alignItems: 'center', justifyContent: 'center', minHeight: 44, maxWidth: 240 },
+  headerName: {
+    fontFamily: typography.headingFamily,
+    fontSize: 16,
+  },
+  headerModel: {
+    marginTop: 1,
+    fontFamily: typography.bodyMediumFamily,
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  empty: { paddingHorizontal: 24, paddingTop: 72, gap: 10 },
+  emptyLead: {
+    fontFamily: typography.headingFamily,
+    fontSize: 22,
+    lineHeight: 30,
+  },
+  emptyNote: {
+    fontFamily: typography.bodyFamily,
+    fontSize: 14,
+    lineHeight: 21,
+  },
   banner: { paddingHorizontal: 16, paddingTop: 8, fontSize: 13 },
   overBudget: {
     flexDirection: 'row',
