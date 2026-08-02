@@ -12,6 +12,9 @@ type Props = {
   secondaryLabel?: string
   onSecondary?: () => void
   disabled?: boolean
+  /** Soft visual mute when the model cannot run (still shown). */
+  unfit?: boolean
+  warning?: string
 }
 
 export function ModelRow({
@@ -23,12 +26,20 @@ export function ModelRow({
   secondaryLabel,
   onSecondary,
   disabled,
+  unfit,
+  warning,
 }: Props) {
   const { colors } = useTheme()
   const busy = typeof progress === 'number'
+  const blocked = disabled || busy || !!unfit
 
   return (
-    <View style={[styles.row, { borderBottomColor: colors.border }]}>
+    <View
+      style={[
+        styles.row,
+        { borderBottomColor: colors.border, opacity: unfit ? 0.72 : 1 },
+      ]}
+    >
       <View style={styles.meta}>
         <Text style={[styles.title, { color: colors.foreground, fontFamily: typography.bodySemiBoldFamily }]}>
           {title}
@@ -36,6 +47,14 @@ export function ModelRow({
         <Text style={[styles.sub, { color: colors.foreground, fontFamily: typography.bodyFamily }]}>
           {subtitle}
         </Text>
+        {warning ? (
+          <Text
+            style={[styles.warn, { color: colors.destructive, fontFamily: typography.bodyMediumFamily }]}
+            accessibilityRole="text"
+          >
+            {warning}
+          </Text>
+        ) : null}
         {busy ? (
           <View style={[styles.barTrack, { backgroundColor: colors.border }]}>
             <View
@@ -51,13 +70,14 @@ export function ModelRow({
         {busy ? <ActivityIndicator color={colors.primary} /> : null}
         <Pressable
           accessibilityRole="button"
-          disabled={disabled || busy}
+          accessibilityState={{ disabled: blocked }}
+          disabled={blocked}
           onPress={onPrimary}
           style={({ pressed }) => [
             styles.btn,
             {
               backgroundColor: colors.primary,
-              opacity: disabled || busy ? 0.4 : pressed ? 0.85 : 1,
+              opacity: blocked ? 0.35 : pressed ? 0.85 : 1,
               minHeight: 44,
               minWidth: 44,
             },
@@ -103,6 +123,7 @@ const styles = StyleSheet.create({
   meta: { flex: 1, gap: 4 },
   title: { fontSize: 16 },
   sub: { fontSize: 13, opacity: 0.75 },
+  warn: { fontSize: 12, marginTop: 2 },
   barTrack: { height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 6 },
   barFill: { height: 4 },
   actions: { flexDirection: 'row', gap: 8, alignItems: 'center' },

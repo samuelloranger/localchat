@@ -35,4 +35,7 @@ export type HubGgufFile = {
   displayName: string
   sizeBytes: number
   sha?: string
+  quant?: string
+  downloads?: number
+  lastModified?: number
 }

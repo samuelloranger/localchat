@@ -8,6 +8,7 @@ import { EmptyState } from '@/src/components/EmptyState'
 import type { Conversation } from '@/src/domain/types'
 import { t } from '@/src/i18n'
 import * as chatStore from '@/src/services/chatStore'
+import { evaluateModelFit } from '@/src/services/deviceCapability'
 import { listInstalled } from '@/src/services/modelStore'
 import { useTheme } from '@/src/theme/ThemeProvider'
 import { typography } from '@/src/theme/typography'
@@ -23,7 +24,7 @@ export default function ChatsScreen() {
   const refresh = useCallback(async () => {
     const [list, models] = await Promise.all([chatStore.listConversations(db), listInstalled(db)])
     setConversations(list)
-    setHasModel(models.length > 0)
+    setHasModel(models.some((m) => evaluateModelFit(m.sizeBytes).fits))
   }, [db])
 
   useFocusEffect(
@@ -34,11 +35,12 @@ export default function ChatsScreen() {
 
   const onNew = async () => {
     const models = await listInstalled(db)
-    if (!models.length) {
+    const runnable = models.filter((m) => evaluateModelFit(m.sizeBytes).fits)
+    if (!runnable.length) {
       router.push('/(tabs)/models')
       return
     }
-    const preferred = [...models].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))[0]
+    const preferred = [...runnable].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))[0]
     const c = await chatStore.createConversation(db, {
       modelId: preferred.id,
       title: t('chats.new'),

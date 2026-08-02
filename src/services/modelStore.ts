@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite'
 import * as FileSystem from 'expo-file-system/legacy'
 
 import type { InstalledModel } from '@/src/domain/types'
+import { evaluateModelFit } from '@/src/services/deviceCapability'
 import { downloadGguf } from '@/src/services/downloadManager'
 import { downloadUrl } from '@/src/services/hfHub'
 
@@ -95,6 +96,13 @@ export async function installFromHub(
     signal?: AbortSignal
   },
 ): Promise<InstalledModel> {
+  const fit = evaluateModelFit(params.sizeBytes)
+  if (!fit.fits) {
+    throw new Error(
+      `MODEL_TOO_LARGE: needs ~${fit.estimatedRamBytes} bytes, device usable ${fit.usableRamBytes}`,
+    )
+  }
+
   const id = modelIdFor(params.repoId, params.filename)
   const localPath = modelFilePath(id)
   const url = downloadUrl(params.repoId, params.filename)

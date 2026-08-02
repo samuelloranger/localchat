@@ -15,6 +15,7 @@ import { MessageBubble } from '@/src/components/MessageBubble'
 import type { Conversation, InstalledModel, Message } from '@/src/domain/types'
 import { t } from '@/src/i18n'
 import * as chatStore from '@/src/services/chatStore'
+import { evaluateModelFit } from '@/src/services/deviceCapability'
 import * as inference from '@/src/services/inference'
 import { listInstalled, touchLastUsed } from '@/src/services/modelStore'
 import { useTheme } from '@/src/theme/ThemeProvider'
@@ -178,7 +179,11 @@ export default function ChatScreen() {
     await inference.stop()
   }
 
-  const modelReady = !!installed.find((m) => m.id === conversation?.modelId)
+  const modelReady = (() => {
+    const model = installed.find((m) => m.id === conversation?.modelId)
+    if (!model) return false
+    return evaluateModelFit(model.sizeBytes).fits
+  })()
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>

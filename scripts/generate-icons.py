@@ -5,7 +5,7 @@ Mark: a speech bubble (chat) enclosing a keyhole (private / on-device).
 Palette comes from design-system/MASTER.md.
 
 Usage: python3 scripts/generate-icons.py
-Writes PNGs into assets/images/ and the vector source to assets/images/logo.svg.
+Writes PNGs into assets/images/. Requires Pillow.
 """
 
 from pathlib import Path
@@ -43,14 +43,12 @@ def draw_mark(size, color, scale=1.0, dy=0.0):
     d.rounded_rectangle([left, top, left + bw, top + bh], radius=r, fill=color)
 
     # --- tail ---------------------------------------------------------------
-    tail_w = 0.30 * bw
-    tail_h = 0.34 * bh
-    tx = left + 0.16 * bw
+    tail_w = 0.34 * bw
+    tail_h = 0.36 * bh
+    tx = left + 0.24 * bw
     ty = top + bh - 2
-    tip = (tx + 0.02 * bw, ty + tail_h)
-    d.polygon([(tx, ty - 0.35 * tail_h), (tx + tail_w, ty), tip], fill=color)
-    tipr = 0.030 * s * scale
-    d.ellipse([tip[0] - tipr, tip[1] - tipr, tip[0] + tipr, tip[1] + tipr], fill=color)
+    tip = (tx + 0.03 * bw, ty + tail_h)
+    d.polygon([(tx, ty - 0.6 * tail_h), (tx + tail_w, ty - 2), tip], fill=color)
 
     # --- keyhole (punched out) ---------------------------------------------
     kcx = cx
