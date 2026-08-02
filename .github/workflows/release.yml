@@ -88,11 +88,11 @@ jobs:
           restore-keys: |
             bun-install-${{ runner.os }}-
 
-      # Pin below Xcode 26: expo-modules-jsi fails to compile on latest-stable
-      # (Swift "type of expression is ambiguous" in JavaScriptCodable+Date.swift).
+      # Expo SDK 57 requires Xcode 26.4+ (Swift 6.3). 26.3 fails in
+      # expo-modules-jsi; 16.4 fails SPM packages that need Swift tools 6.2.
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: '26.4'
 
       - name: Install deps
         run: bun install --frozen-lockfile
