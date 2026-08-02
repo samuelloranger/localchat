@@ -5,11 +5,11 @@ import { N_CTX } from '@/src/services/inferenceConstants'
 
 /**
  * Usable RAM fraction of physical memory for model budgeting.
- * iOS: jetsam kills apps well below physical RAM (~35–45% is a practical ceiling).
- * Android: foreground apps can use more, but the OS reclaims aggressively (~60–70%).
+ * With use_mmap: true, weights are demand-paged; leave a little OS headroom
+ * but do not over-penalize. The fit gate is a warning, not a hard block.
  */
-export const IOS_RAM_USABLE_FRACTION = 0.4
-export const ANDROID_RAM_USABLE_FRACTION = 0.65
+export const IOS_RAM_USABLE_FRACTION = 0.85
+export const ANDROID_RAM_USABLE_FRACTION = 0.85
 
 /** @deprecated Use platform-specific constants via getDeviceRamUsableFraction(). */
 export const DEVICE_RAM_USABLE_FRACTION = IOS_RAM_USABLE_FRACTION

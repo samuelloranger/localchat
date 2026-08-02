@@ -192,9 +192,11 @@ export default function ModelsScreen() {
     (sizeBytes: number) => {
       const fit = evaluateModelFit(sizeBytes, deviceRam)
       if (fit.fits) return undefined
+      // Compare against usable budget (jetsam / OS headroom), not total RAM —
+      // showing deviceRamBytes here made "needs 4.6 / has 5.5" look absurd.
       return t('models.unfitRam', {
         need: formatGiB(fit.estimatedRamBytes),
-        have: formatGiB(fit.deviceRamBytes),
+        have: formatGiB(fit.usableRamBytes),
         unit: ramUnit,
       })
     },

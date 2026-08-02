@@ -33,11 +33,10 @@ test('evaluateModelFit rejects models larger than usable RAM', () => {
   expect(huge.usableRamBytes).toBe(Math.floor(ram * getDeviceRamUsableFraction()))
 })
 
-test('iOS budget is smaller than Android for the same totalMemory', () => {
-  const ram = 6 * 1024 * 1024 * 1024
-  const iosBudget = Math.floor(ram * IOS_RAM_USABLE_FRACTION)
-  const androidBudget = Math.floor(ram * ANDROID_RAM_USABLE_FRACTION)
-  expect(iosBudget).toBeLessThan(androidBudget)
+test('platform usable fractions are 85%', () => {
+  expect(IOS_RAM_USABLE_FRACTION).toBe(0.85)
+  expect(ANDROID_RAM_USABLE_FRACTION).toBe(0.85)
+  expect(getDeviceRamUsableFraction()).toBe(0.85)
 })
 
 test('fallback device RAM is conservative 2 GiB', () => {
