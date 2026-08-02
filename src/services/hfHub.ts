@@ -1,11 +1,22 @@
 import type { HubGgufFile } from '@/src/domain/types'
-import { parseQuantFamily } from '@/src/services/modelCatalog'
+import {
+  isShardedGguf,
+  parseQuantFamily,
+  selectRepoFiles,
+} from '@/src/services/modelCatalog'
 
 /** Soft cap for browsing (show larger files as disabled if they don't fit RAM). */
 export const BROWSE_MAX_BYTES = 8 * 1024 * 1024 * 1024
 
 const TREE_FETCH_CONCURRENCY = 6
 const SEARCH_REPO_LIMIT = 8
+
+/**
+ * Files kept per repo. Generous on purpose: the quant chips filter this list
+ * client-side, so anything dropped here is invisible to every filter. Ordering
+ * is by usefulness (see selectRepoFiles), never by size.
+ */
+const REPO_FILE_LIMIT = 12
 
 /** Common public instruct GGUF repos for the default Models list. */
 export const CURATED_REPOS = [
@@ -52,6 +63,9 @@ export function filterGgufEntries(
         e.type === 'file' &&
         typeof e.path === 'string' &&
         e.path.toLowerCase().endsWith('.gguf') &&
+        // A split GGUF piece cannot be loaded on its own; offering one as a
+        // download would always produce a broken install.
+        !isShardedGguf(e.path) &&
         typeof e.size === 'number' &&
         e.size > 0 &&
         e.size <= maxBytes,
@@ -180,7 +194,7 @@ export async function searchGgufModels(
         signal,
         ...cardMeta(model),
       })
-      return [...listed].sort((a, b) => a.sizeBytes - b.sizeBytes).slice(0, 4)
+      return selectRepoFiles(listed, REPO_FILE_LIMIT)
     } catch {
       return [] as HubGgufFile[]
     }
