@@ -203,16 +203,24 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          # The tag push checks out the tag; the manifest is tracked on main and
-          # the commit below has to land there.
-          ref: main
+      # Deliberately no actions/checkout: this job needs nothing but git, gh and
+      # jq, all preinstalled on the runner. Keeping it action-free means a
+      # restrictive "Actions permissions" policy cannot break the manifest sync.
+      #
+      # Clones main rather than the tag — the tag push checks out the tag, and
+      # the commit below has to land on main.
+      - name: Clone main
+        run: |
+          git clone --depth 1 --branch main \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          echo "REPO_DIR=$PWD/repo" >> "$GITHUB_ENV"
 
       - name: Sync altstore.json from the release
+        working-directory: repo
         run: scripts/altstore-release.sh "$TAG"
 
       - name: Commit manifest
+        working-directory: repo
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
