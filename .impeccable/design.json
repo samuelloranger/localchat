@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-02T03:04:42Z",
+  "title": "Design System: LocalChat",
+  "extensions": {
+    "colorMeta": {
+      "harbor-teal": {
+        "role": "primary",
+        "displayName": "Harbor Teal",
+        "canonical": "#0D9488",
+        "tonalRamp": [
+          "#0A3D38",
+          "#0B5C54",
+          "#0C7A6E",
+          "#0D9488",
+          "#2AA99D",
+          "#5BC0B6",
+          "#9AD9D2",
+          "#D5F0EC"
+        ]
+      },
+      "on-primary": {
+        "role": "primary",
+        "displayName": "On Primary",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#B8B8B8",
+          "#C8C8C8",
+          "#D8D8D8",
+          "#E8E8E8",
+          "#F0F0F0",
+          "#F5F5F5",
+          "#FAFAFA",
+          "#FFFFFF"
+        ]
+      },
+      "warm-paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#FAFAF8",
+        "tonalRamp": [
+          "#C8C8C4",
+          "#D6D6D2",
+          "#E2E2DE",
+          "#EBEBE8",
+          "#F2F2EF",
+          "#F6F6F3",
+          "#FAFAF8",
+          "#FFFFFF"
+        ]
+      },
+      "ink-forest": {
+        "role": "neutral",
+        "displayName": "Ink Forest",
+        "canonical": "#14201F",
+        "tonalRamp": [
+          "#0A100F",
+          "#14201F",
+          "#243533",
+          "#3A4E4B",
+          "#5A716D",
+          "#8A9E9A",
+          "#B8C6C3",
+          "#E8EEEC"
+        ]
+      },
+      "mist-surface": {
+        "role": "neutral",
+        "displayName": "Mist Surface",
+        "canonical": "#F0F4F3",
+        "tonalRamp": [
+          "#9AA8A5",
+          "#B4C0BD",
+          "#C8D2D0",
+          "#D8E0DE",
+          "#E4EAE8",
+          "#EAF0EE",
+          "#F0F4F3",
+          "#F7FAF9"
+        ]
+      },
+      "soft-seam": {
+        "role": "neutral",
+        "displayName": "Soft Seam",
+        "canonical": "#D5DEDC",
+        "tonalRamp": [
+          "#6B7875",
+          "#8A9894",
+          "#A8B5B1",
+          "#BCC7C4",
+          "#C9D2CF",
+          "#D5DEDC",
+          "#E2E9E7",
+          "#F0F4F3"
+        ]
+      },
+      "deep-ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "#0C1211",
+        "tonalRamp": [
+          "#050808",
+          "#0C1211",
+          "#1A2422",
+          "#2A3734",
+          "#3F524E",
+          "#5E726D",
+          "#8FA09B",
+          "#C5D0CD"
+        ]
+      },
+      "pale-ink": {
+        "role": "neutral",
+        "displayName": "Pale Ink",
+        "canonical": "#E8EEEC",
+        "tonalRamp": [
+          "#6B7875",
+          "#8A9894",
+          "#A8B5B1",
+          "#C0CBC8",
+          "#D0D9D6",
+          "#DCE4E1",
+          "#E8EEEC",
+          "#F4F7F6"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#1A2422",
+        "tonalRamp": [
+          "#0C1211",
+          "#121A18",
+          "#1A2422",
+          "#24302D",
+          "#2A3734",
+          "#3A4A46",
+          "#5A6B66",
+          "#8A9A95"
+        ]
+      },
+      "night-seam": {
+        "role": "neutral",
+        "displayName": "Night Seam",
+        "canonical": "#2A3734",
+        "tonalRamp": [
+          "#0C1211",
+          "#1A2422",
+          "#22302D",
+          "#2A3734",
+          "#3A4A46",
+          "#4E605B",
+          "#6B807A",
+          "#9AADA7"
+        ]
+      },
+      "alert-red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#DC2626",
+        "tonalRamp": [
+          "#7F1D1D",
+          "#991B1B",
+          "#B91C1C",
+          "#DC2626",
+          "#EF4444",
+          "#F87171",
+          "#FCA5A5",
+          "#FECACA"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Empty-state and rare screen titles (Lora)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Confirm sheets and section emphasis (Lora)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "List row titles — chats and models (Raleway 600)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Chat bubbles and settings copy (Raleway 16 / 1.5)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Subtitles, warnings, button labels (Raleway 500–600)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet-lift",
+        "value": "0 4px 16px rgba(12, 18, 17, 0.12)",
+        "purpose": "Soft lift for confirm sheets and elevated composer only."
+      },
+      {
+        "name": "preview-ambient",
+        "value": "0 12px 28px rgba(12, 18, 17, 0.18)",
+        "purpose": "Marketing/mockup device chrome — not in-app list cards."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "150ms–300ms ease; scale 0.97 → 1.0",
+        "purpose": "Press feedback on primary actions."
+      },
+      {
+        "name": "reduce-motion",
+        "value": "crossfade / instant; no caret pulse",
+        "purpose": "Honor system Reduce Motion."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Harbor Teal commitment control — Send, Download, New chat, empty-state CTA.",
+      "html": "<button class=\"ds-btn-primary\">New chat</button>",
+      "css": ".ds-btn-primary { background: #0D9488; color: #FFFFFF; padding: 12px 16px; border: none; border-radius: 16px; font-family: Raleway, system-ui, sans-serif; font-size: 13px; font-weight: 600; min-height: 44px; cursor: pointer; transition: opacity 0.2s, transform 0.2s; } .ds-btn-primary:hover { opacity: 0.85; } .ds-btn-primary:focus-visible { outline: 2px solid #0D9488; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:disabled { opacity: 0.4; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Stop generation or confirm-delete fill.",
+      "html": "<button class=\"ds-btn-destructive\">Stop</button>",
+      "css": ".ds-btn-destructive { background: #DC2626; color: #FFFFFF; padding: 10px 14px; border: none; border-radius: 16px; font-family: Raleway, system-ui, sans-serif; font-size: 13px; font-weight: 600; min-height: 44px; min-width: 44px; cursor: pointer; transition: opacity 0.2s; } .ds-btn-destructive:hover { opacity: 0.85; } .ds-btn-destructive:focus-visible { outline: 2px solid #DC2626; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Destructive",
+      "kind": "button",
+      "refersTo": "button-outline-destructive",
+      "description": "Secondary delete on model rows.",
+      "html": "<button class=\"ds-btn-outline-destructive\">Delete</button>",
+      "css": ".ds-btn-outline-destructive { background: transparent; color: #DC2626; padding: 8px 12px; border: 1px solid #DC2626; border-radius: 12px; font-family: Raleway, system-ui, sans-serif; font-size: 13px; font-weight: 500; min-height: 44px; cursor: pointer; transition: opacity 0.2s; } .ds-btn-outline-destructive:hover { opacity: 0.85; } .ds-btn-outline-destructive:focus-visible { outline: 2px solid #DC2626; outline-offset: 2px; }"
+    },
+    {
+      "name": "Composer Field",
+      "kind": "input",
+      "refersTo": "input-composer",
+      "description": "Multiline chat input on Mist Surface with Soft Seam border.",
+      "html": "<div class=\"ds-composer\"><textarea class=\"ds-input-composer\" rows=\"2\" placeholder=\"Message…\"></textarea><button class=\"ds-btn-primary\">Send</button></div>",
+      "css": ".ds-composer { display: flex; gap: 8px; align-items: flex-end; padding: 12px; border-top: 1px solid #D5DEDC; background: #FAFAF8; box-shadow: 0 4px 16px rgba(12,18,17,0.12); } .ds-input-composer { flex: 1; background: #F0F4F3; color: #14201F; border: 1px solid #D5DEDC; border-radius: 16px; padding: 10px 12px; font-family: Raleway, system-ui, sans-serif; font-size: 16px; line-height: 1.5; min-height: 44px; max-height: 120px; resize: none; } .ds-input-composer::placeholder { color: #D5DEDC; } .ds-input-composer:focus-visible { outline: 2px solid #0D9488; outline-offset: 1px; } .ds-composer .ds-btn-primary { background: #0D9488; color: #FFFFFF; padding: 10px 14px; border: none; border-radius: 16px; font-family: Raleway, system-ui, sans-serif; font-weight: 600; min-height: 44px; min-width: 44px; }"
+    },
+    {
+      "name": "User Bubble",
+      "kind": "custom",
+      "refersTo": "bubble-user",
+      "description": "Right-aligned Harbor Teal user message.",
+      "html": "<div class=\"ds-bubble-row ds-bubble-row-user\"><div class=\"ds-bubble-user\">What's a good hiking checklist?</div></div>",
+      "css": ".ds-bubble-row { display: flex; padding: 6px 16px; } .ds-bubble-row-user { justify-content: flex-end; } .ds-bubble-user { max-width: 85%; background: #0D9488; color: #FFFFFF; border: 1px solid #D5DEDC; border-radius: 16px; padding: 10px 14px; font-family: Raleway, system-ui, sans-serif; font-size: 16px; line-height: 1.5; }"
+    },
+    {
+      "name": "Assistant Bubble",
+      "kind": "custom",
+      "refersTo": "bubble-assistant",
+      "description": "Left-aligned Mist Surface assistant reply.",
+      "html": "<div class=\"ds-bubble-row ds-bubble-row-assistant\"><div class=\"ds-bubble-assistant\">Start with water, layers, and a map offline.</div></div>",
+      "css": ".ds-bubble-row { display: flex; padding: 6px 16px; } .ds-bubble-row-assistant { justify-content: flex-start; } .ds-bubble-assistant { max-width: 85%; background: #F0F4F3; color: #14201F; border: 1px solid #D5DEDC; border-radius: 16px; padding: 10px 14px; font-family: Raleway, system-ui, sans-serif; font-size: 16px; line-height: 1.5; }"
+    },
+    {
+      "name": "Confirm Sheet",
+      "kind": "card",
+      "refersTo": "sheet-confirm",
+      "description": "Bottom confirm panel over scrim — soft lift exception.",
+      "html": "<div class=\"ds-sheet-scrim\"><div class=\"ds-sheet-confirm\"><h2 class=\"ds-sheet-title\">Delete conversation?</h2><p class=\"ds-sheet-body\">This cannot be undone.</p><div class=\"ds-sheet-actions\"><button class=\"ds-btn-ghost\">Cancel</button><button class=\"ds-btn-destructive\">Delete</button></div></div></div>",
+      "css": ".ds-sheet-scrim { background: rgba(0,0,0,0.45); padding: 24px 0 0; border-radius: 12px; } .ds-sheet-confirm { background: #F0F4F3; border: 1px solid #D5DEDC; border-radius: 16px 16px 0 0; padding: 24px; box-shadow: 0 4px 16px rgba(12,18,17,0.12); } .ds-sheet-title { margin: 0 0 12px; font-family: Lora, Georgia, serif; font-size: 20px; font-weight: 600; color: #14201F; } .ds-sheet-body { margin: 0 0 16px; font-family: Raleway, system-ui, sans-serif; font-size: 16px; line-height: 1.5; color: #14201F; } .ds-sheet-actions { display: flex; gap: 12px; } .ds-btn-ghost { flex: 1; background: transparent; color: #14201F; border: 1px solid #D5DEDC; border-radius: 16px; padding: 12px 16px; font-family: Raleway, system-ui, sans-serif; font-weight: 500; min-height: 44px; cursor: pointer; } .ds-btn-ghost:focus-visible { outline: 2px solid #0D9488; outline-offset: 2px; } .ds-sheet-actions .ds-btn-destructive { flex: 1; background: #DC2626; color: #FFFFFF; border: none; border-radius: 16px; padding: 12px 16px; font-family: Raleway, system-ui, sans-serif; font-weight: 600; min-height: 44px; cursor: pointer; }"
+    },
+    {
+      "name": "Tab Navigation",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Three-tab bar — active Harbor Teal tint + Lucide icons.",
+      "html": "<nav class=\"ds-tab-nav\" aria-label=\"Main\"><button class=\"ds-tab ds-tab-active\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg>Chats</button><button class=\"ds-tab\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z\"/><path d=\"m7 16.5-4.74-2.85\"/><path d=\"m7 16.5 5 3\"/><path d=\"M7 16.5v5.17\"/><path d=\"M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z\"/></svg>Models</button><button class=\"ds-tab\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>Settings</button></nav>",
+      "css": ".ds-tab-nav { display: flex; background: #FAFAF8; border-top: 1px solid #D5DEDC; } .ds-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px; min-height: 44px; border: none; background: transparent; color: #14201F; font-family: Raleway, system-ui, sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; } .ds-tab-active { color: #0D9488; font-weight: 600; } .ds-tab:focus-visible { outline: 2px solid #0D9488; outline-offset: -2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pocket Vault",
+    "overview": "LocalChat looks like a private pocket vault for on-device conversation — calm, precise, and sealed. Harbor Teal is the lock mark: rare, actionable, never decorative wallpaper. Surfaces stay Warm Paper by day and Deep Ink by night so the vault feels quiet rather than theatrical.\n\nThe system is refined and restrained: soft 16px corners, hairline seams, Lucide icons, and typography that does the talking (Lora for titles, Raleway for chat). Depth is mostly tonal; a single soft ambient lift is reserved for the composer bar and confirm sheets — never a floating card stack. Motion is short (150–300ms press feedback, streaming caret when allowed) and always yields to Reduce Motion.\n\nConfirmed visual rejections: purple/indigo “AI” gradients, emoji as structural icons, hover-only affordances, and pure black #000000 flats that smear on OLED.",
+    "keyCharacteristics": [
+      "Pocket Vault metaphor — privacy reads as quiet teal, not neon chrome",
+      "Single accent (Harbor Teal) on ≤~10% of any screen",
+      "Lora headings + Raleway body/chat at 16px / 1.5",
+      "Flat lists with soft lift only on composer and sheets",
+      "Light and dark are first-class; appearance follows system by default"
+    ],
+    "rules": [
+      {
+        "name": "The One Lock Rule",
+        "body": "Harbor Teal appears on interactive commitment (send, download, active tab, user bubble) — not as page washes, hero gradients, or decorative chips filling the screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Purple AI Rule",
+        "body": "Never introduce purple, indigo, or multi-stop neon gradients as “AI branding.”",
+        "section": "colors"
+      },
+      {
+        "name": "The Chat Legibility Rule",
+        "body": "Message body stays Raleway ≥16px with ~1.5 line-height; never shrink chat text to fit more chrome.",
+        "section": "typography"
+      },
+      {
+        "name": "The Soft-Lift Exception",
+        "body": "Shadows are not a default card language. If it isn’t the composer or a sheet, it stays flat.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do treat Harbor Teal as the single lock accent for commitment actions and active state.",
+      "Do keep chat body at ≥16px Raleway with ~1.5 line-height.",
+      "Do support light and dark as equal themes; avoid pure #000000 large flats.",
+      "Do show unfit models as muted + disabled with an explicit RAM reason.",
+      "Do respect Reduce Motion (crossfade / no caret pulse).",
+      "Do keep touch targets ≥44pt with ≥8pt gaps; Lucide (or one vector set) only."
+    ],
+    "donts": [
+      "Don't use purple/indigo gradients or “AI startup” glow stacks.",
+      "Don't use emoji as nav, settings, or structural icons.",
+      "Don't put drop shadows on list cards or chat bubbles.",
+      "Don't invent a second brand accent; Alert Red is semantic only.",
+      "Don't rely on hover-only affordances — this is phone-first.",
+      "Don't place the composer under the keyboard or home indicator."
+    ]
+  }
+}
