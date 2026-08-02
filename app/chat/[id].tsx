@@ -2,10 +2,9 @@ import { useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router
 import { useSQLiteContext } from 'expo-sqlite'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
+  Animated,
   AppState,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -26,6 +25,7 @@ import { typography } from '@/src/theme/typography'
 import { buildContext } from '@/src/chat/buildContext'
 import { formatModelLabel, formatProvenance } from '@/src/chat/modelLabel'
 import { useDeviceRam } from '@/src/hooks/useDeviceRam'
+import { useKeyboardInset } from '@/src/hooks/useKeyboardInset'
 
 const UI_FLUSH_MS = 50
 const DB_FLUSH_MS = 750
@@ -117,6 +117,7 @@ export default function ChatScreen() {
   const { colors } = useTheme()
   const { t } = useTranslation()
   const deviceRam = useDeviceRam()
+  const keyboardInset = useKeyboardInset()
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [installed, setInstalled] = useState<InstalledModel[]>([])
@@ -329,10 +330,8 @@ export default function ChatScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+    <Animated.View
+      style={[styles.flex, { backgroundColor: colors.background, paddingBottom: keyboardInset }]}
     >
       {infoBanner ? (
         <Text
@@ -422,7 +421,7 @@ export default function ChatScreen() {
         disabled={!hasInstalledModel}
         streaming={streaming}
       />
-    </KeyboardAvoidingView>
+    </Animated.View>
   )
 }
 
