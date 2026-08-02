@@ -5,6 +5,15 @@ const fr = {
     settings: 'Réglages',
   },
   chats: {
+    emptyTitle: 'Commence une discussion',
+    emptyNeedModelTitle: 'Aucun modèle',
+    bucket: {
+      today: "Aujourd'hui",
+      yesterday: 'Hier',
+      week: 'Cette semaine',
+      month: 'Ce mois-ci',
+      older: 'Plus tôt',
+    },
     new: 'Nouvelle discussion',
     empty:
       'Aucune discussion pour l’instant. Téléchargez un modèle, puis commencez à discuter.',
@@ -88,6 +97,9 @@ const fr = {
     copy: 'Copié',
   },
   settings: {
+    sectionAppearance: 'Préférences',
+    sectionDanger: 'Zone de danger',
+    deleteAllNote: 'Supprime toutes les discussions et les modèles téléchargés. Sans retour possible.',
     privacy:
       'Les discussions et modèles restent sur votre appareil. Hugging Face sert uniquement à télécharger des modèles publics. Pas de compte, pas d’analytique.',
     appearance: 'Apparence',

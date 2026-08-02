@@ -14,24 +14,19 @@ export function EmptyState({ title, body, actionLabel, onAction }: Props) {
   const { colors } = useTheme()
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.title, { color: colors.foreground, fontFamily: typography.headingFamily }]}>
-        {title}
-      </Text>
-      <Text style={[styles.body, { color: colors.foreground, fontFamily: typography.bodyFamily }]}>
-        {body}
-      </Text>
+      <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+      <Text style={[styles.body, { color: colors.mutedForeground }]}>{body}</Text>
       {actionLabel && onAction ? (
         <Pressable
           accessibilityRole="button"
           onPress={onAction}
+          accessibilityLabel={actionLabel}
           style={({ pressed }) => [
             styles.btn,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1, minHeight: 44 },
+            { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
           ]}
         >
-          <Text style={{ color: colors.onPrimary, fontFamily: typography.bodySemiBoldFamily }}>
-            {actionLabel}
-          </Text>
+          <Text style={[styles.btnText, { color: colors.onPrimary }]}>{actionLabel}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -39,15 +34,26 @@ export function EmptyState({ title, body, actionLabel, onAction }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { padding: 24, gap: 12, alignItems: 'flex-start' },
-  title: { fontSize: 24 },
-  body: { fontSize: 16, lineHeight: 24 },
+  // Centred in the space it is given rather than pinned to the top-left: an
+  // empty list is mostly emptiness, and copy stranded in the corner reads as a
+  // rendering accident.
+  wrap: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingVertical: 48,
+    gap: 12,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  title: { fontFamily: typography.headingFamily, fontSize: 25, lineHeight: 32 },
+  body: { fontFamily: typography.bodyFamily, fontSize: 15, lineHeight: 23 },
   btn: {
-    marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    marginTop: 10,
+    paddingHorizontal: 18,
+    minHeight: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  btnText: { fontFamily: typography.bodySemiBoldFamily, fontSize: 15 },
 })

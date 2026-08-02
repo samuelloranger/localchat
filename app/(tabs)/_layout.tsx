@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router'
 
 import { useTranslation } from '@/src/i18n/LocaleProvider'
 import { useTheme } from '@/src/theme/ThemeProvider'
+import { typography } from '@/src/theme/typography'
 
 export default function TabLayout() {
   const { colors } = useTheme()
@@ -12,13 +13,18 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.foreground,
+        tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
         },
         headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: { color: colors.foreground },
+        headerTitleStyle: {
+          color: colors.foreground,
+          fontFamily: typography.headingFamily,
+          fontSize: 17,
+        },
+        tabBarLabelStyle: { fontFamily: typography.bodyMediumFamily, fontSize: 11 },
         headerTintColor: colors.primary,
       }}
     >

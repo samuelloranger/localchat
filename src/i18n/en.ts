@@ -5,6 +5,15 @@ const en = {
     settings: 'Settings',
   },
   chats: {
+    emptyTitle: 'Start a conversation',
+    emptyNeedModelTitle: 'No model yet',
+    bucket: {
+      today: 'Today',
+      yesterday: 'Yesterday',
+      week: 'This week',
+      month: 'This month',
+      older: 'Earlier',
+    },
     new: 'New chat',
     empty: 'No conversations yet. Download a model, then start chatting.',
     emptyNeedModel: 'Install a model first, then start a chat.',
@@ -85,6 +94,9 @@ const en = {
     copy: 'Copied',
   },
   settings: {
+    sectionAppearance: 'Preferences',
+    sectionDanger: 'Danger zone',
+    deleteAllNote: 'Deletes every conversation and downloaded model. This cannot be undone.',
     privacy:
       'Chats and models stay on your device. Hugging Face is only used to download public models. No accounts, no analytics.',
     appearance: 'Appearance',
