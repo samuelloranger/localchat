@@ -12,10 +12,12 @@ import {
 import { Stack } from 'expo-router'
 import { SQLiteProvider } from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import 'react-native-reanimated'
 
 import { migrateDbIfNeeded } from '@/src/db/migrate'
+import { setLocale } from '@/src/i18n'
+import { loadAppearance, loadLocale } from '@/src/services/preferences'
 import { ThemeProvider, useTheme } from '@/src/theme/ThemeProvider'
 
 export { ErrorBoundary } from 'expo-router'
@@ -25,6 +27,18 @@ export const unstable_settings = {
 }
 
 SplashScreen.preventAutoHideAsync()
+
+function BootstrapPrefs({ children }: { children: ReactNode }) {
+  const { setAppearance } = useTheme()
+  useEffect(() => {
+    void (async () => {
+      const [appearance, locale] = await Promise.all([loadAppearance(), loadLocale()])
+      setAppearance(appearance)
+      setLocale(locale)
+    })()
+  }, [setAppearance])
+  return children
+}
 
 export default function RootLayout() {
   const [loraLoaded, loraError] = useLoraFonts({
@@ -56,9 +70,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <SQLiteProvider databaseName="localchat.db" onInit={migrateDbIfNeeded}>
-        <RootLayoutNav />
-      </SQLiteProvider>
+      <BootstrapPrefs>
+        <SQLiteProvider databaseName="localchat.db" onInit={migrateDbIfNeeded}>
+          <RootLayoutNav />
+        </SQLiteProvider>
+      </BootstrapPrefs>
     </ThemeProvider>
   )
 }
@@ -75,6 +91,7 @@ function RootLayoutNav() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
     </Stack>
   )
 }
