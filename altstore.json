@@ -18,6 +18,14 @@
       "category": "other",
       "versions": [
         {
+          "version": "0.3.0",
+          "date": "2026-08-02",
+          "localizedDescription": "Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID.",
+          "downloadURL": "https://github.com/samuelloranger/localchat/releases/download/v0.3.0/localchat.ipa",
+          "size": 17035641,
+          "minOSVersion": "16.4"
+        },
+        {
           "version": "0.2.0",
           "date": "2026-08-02",
           "localizedDescription": "Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID.",
