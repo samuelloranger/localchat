@@ -111,23 +111,17 @@ function RootLayoutNav() {
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.primary,
         contentStyle: { backgroundColor: colors.background },
+        // Chevron only, on every screen. iOS otherwise labels the back button
+        // with the previous screen's title.
+        headerBackButtonDisplayMode: 'minimal',
+        headerBackTitle: '',
       }}
     >
-      {/* The back button label is taken from the previous screen's title. This
-          screen hides its header, so nothing set one and iOS fell back to the
-          route name — rendering a literal "(tabs)" beside the chevron. */}
-      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'LocalChat' }} />
-      <Stack.Screen
-        name="chat/[id]"
-        options={{
-          title: 'Chat',
-          // The chat header carries a stacked title/model block in the centre,
-          // so the back control stays a bare chevron rather than competing
-          // with it for width.
-          headerBackButtonDisplayMode: 'minimal',
-          headerBackTitle: '',
-        }}
-      />
+      {/* Empty title, not just a hidden header: the back button label falls
+          back to the previous screen's title, and with nothing set iOS used
+          the route name and drew a literal "(tabs)" next to the chevron. */}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
+      <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
     </Stack>
   )
 }
