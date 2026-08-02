@@ -1,5 +1,6 @@
 import type { HubGgufFile } from '@/src/domain/types'
 import {
+  isCpuRepackGguf,
   isNonModelGguf,
   isShardedGguf,
   parseQuantFamily,
@@ -69,6 +70,7 @@ export function filterGgufEntries(
         // LoRA adapters and tokenizer dumps, which are not models at all.
         !isShardedGguf(e.path) &&
         !isNonModelGguf(e.path) &&
+        !isCpuRepackGguf(e.path) &&
         typeof e.size === 'number' &&
         e.size > 0 &&
         e.size <= maxBytes,

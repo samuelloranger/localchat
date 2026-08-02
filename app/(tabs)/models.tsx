@@ -15,6 +15,7 @@ import { ConfirmSheet } from '@/src/components/ConfirmSheet'
 import { EmptyState } from '@/src/components/EmptyState'
 import { ModelRow } from '@/src/components/ModelRow'
 import type { HubGgufFile, InstalledModel } from '@/src/domain/types'
+import { formatModelLabel } from '@/src/chat/modelLabel'
 import { useDeviceRam } from '@/src/hooks/useDeviceRam'
 import { useTranslation } from '@/src/i18n/LocaleProvider'
 import { DownloadError, DownloadErrorCode } from '@/src/services/downloadManager'
@@ -95,6 +96,19 @@ function downloadErrorMessage(err: unknown, t: (key: string) => string): string 
   return t('models.downloadErrorGeneric')
 }
 
+/**
+ * Inline divider inside the filter scroller. Four different things are being
+ * controlled in one row — fit, quant, size, order — and without a mark for
+ * where one ends and the next begins they read as one undifferentiated pile of
+ * chips. Also the only cue that the row continues past the right edge.
+ */
+function GroupLabel({ text }: { text: string }) {
+  const { colors } = useTheme()
+  return (
+    <Text style={[styles.groupLabel, { color: colors.mutedForeground }]}>{text}</Text>
+  )
+}
+
 function Chip({
   label,
   active,
@@ -170,20 +184,15 @@ export default function ModelsScreen() {
     [t, ramUnit],
   )
 
-  const formatSubtitle = useCallback(
+  // Separate cells, not a sentence: these are four independent facts and the
+  // reader scans them, they do not read them.
+  const formatMetrics = useCallback(
     (file: HubGgufFile, fit: ReturnType<typeof evaluateModelFit>) => {
-      const quantLabel = file.quant ?? 'GGUF'
-      const ram = formatRamEstimate(fit.estimatedRamBytes)
-      const size = formatMb(file.sizeBytes)
+      const cells = [formatMb(file.sizeBytes), formatRamEstimate(fit.estimatedRamBytes)]
       if (typeof file.downloads === 'number') {
-        return t('models.subtitleDownloads', {
-          quant: quantLabel,
-          size,
-          ram,
-          downloads: file.downloads.toLocaleString(activeLocale),
-        })
+        cells.push(t('models.downloadsCount', { n: file.downloads.toLocaleString(activeLocale) }))
       }
-      return t('models.subtitle', { quant: quantLabel, size, ram })
+      return cells
     },
     [t, formatMb, formatRamEstimate, activeLocale],
   )
@@ -425,7 +434,10 @@ export default function ModelsScreen() {
       />
 
       <Text style={[styles.deviceLine, { color: colors.mutedForeground, fontFamily: typography.bodyFamily }]}>
-        {t('models.deviceRam', { n: formatGiB(deviceRam), unit: ramUnit })}
+        {t('models.deviceBudget', {
+          n: formatGiB(evaluateModelFit(0, deviceRam).usableRamBytes),
+          unit: ramUnit,
+        })}
       </Text>
 
       <ScrollView
@@ -435,6 +447,8 @@ export default function ModelsScreen() {
         contentContainerStyle={styles.chips}
       >
         <Chip label={t('models.fitsDevice')} active={fitsOnly} onPress={() => setFitsOnly((v) => !v)} />
+
+        <GroupLabel text={t('models.groupQuant')} />
         {QUANT_OPTIONS.map((opt) => (
           <Chip
             key={opt.value}
@@ -443,6 +457,8 @@ export default function ModelsScreen() {
             onPress={() => setQuant(opt.value)}
           />
         ))}
+
+        <GroupLabel text={t('models.groupSize')} />
         {SIZE_OPTIONS.map((opt) => (
           <Chip
             key={opt.labelKey}
@@ -451,6 +467,8 @@ export default function ModelsScreen() {
             onPress={() => setMaxSize(opt.value)}
           />
         ))}
+
+        <GroupLabel text={t('models.groupSort')} />
         {SORT_OPTIONS.map((opt) => (
           <Chip
             key={opt.value}
@@ -476,11 +494,13 @@ export default function ModelsScreen() {
           item.kind === 'installed' ? `i:${item.model.id}` : `a:${hubFileId(item.file)}`
         }
         renderSectionHeader={({ section: { title } }) => (
-          <Text
-            style={[styles.section, { color: colors.foreground, fontFamily: typography.bodySemiBoldFamily }]}
-          >
-            {title}
-          </Text>
+          <View style={[styles.sectionWrap, { backgroundColor: colors.background }]}>
+            <Text
+              style={[styles.section, { color: colors.mutedForeground }]}
+            >
+              {title}
+            </Text>
+          </View>
         )}
         ListEmptyComponent={listEmpty()}
         ListFooterComponent={
@@ -498,7 +518,7 @@ export default function ModelsScreen() {
             const m = item.model
             const fit = evaluateModelFit(m.sizeBytes, deviceRam)
             const warning = unfitWarning(m.sizeBytes)
-            const subtitle = formatSubtitle(
+            const metrics = formatMetrics(
               {
                 repoId: m.repoId,
                 filename: m.filename,
@@ -510,8 +530,12 @@ export default function ModelsScreen() {
             )
             return (
               <ModelRow
-                title={m.displayName}
-                subtitle={subtitle}
+                title={formatModelLabel(m.displayName)}
+                quant={parseQuantFamily(m.filename)}
+                installed
+                metrics={metrics}
+                fitRatio={fit.estimatedRamBytes / fit.usableRamBytes}
+                primaryIcon="chat"
                 primaryLabel={t('chats.new')}
                 onPrimary={() => void onNewChat(m)}
                 secondaryLabel={t('models.delete')}
@@ -527,8 +551,10 @@ export default function ModelsScreen() {
           const warning = unfitWarning(f.sizeBytes)
           return (
             <ModelRow
-              title={f.displayName}
-              subtitle={formatSubtitle(f, fit)}
+              title={formatModelLabel(f.displayName)}
+              quant={f.quant ?? parseQuantFamily(f.filename)}
+              metrics={formatMetrics(f, fit)}
+              fitRatio={fit.estimatedRamBytes / fit.usableRamBytes}
               accessibilityHint={
                 typeof f.downloads === 'number'
                   ? t('models.downloadsCount', { n: f.downloads.toLocaleString(activeLocale) })
@@ -600,6 +626,14 @@ const styles = StyleSheet.create({
   // chip row centres itself in a full-screen-tall box and pushes the list down.
   chipBar: { flexGrow: 0, flexShrink: 0 },
   chips: { paddingHorizontal: 16, paddingBottom: 8, gap: 8, alignItems: 'center' },
+  groupLabel: {
+    fontFamily: typography.bodySemiBoldFamily,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginLeft: 6,
+    marginRight: 2,
+  },
   chip: {
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
@@ -608,5 +642,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   banner: { paddingHorizontal: 16, marginBottom: 8, fontSize: 14 },
-  section: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 14 },
+  // Sticky headers float above the list, so without an opaque background the
+  // first row of the section scrolls underneath and the two overlap.
+  sectionWrap: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  section: {
+    fontFamily: typography.bodySemiBoldFamily,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
 })

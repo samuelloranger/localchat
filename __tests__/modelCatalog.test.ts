@@ -1,6 +1,7 @@
 import { evaluateModelFit } from '../src/services/deviceCapability'
 import {
   applyModelFilters,
+  isCpuRepackGguf,
   isNonModelGguf,
   isShardedGguf,
   parseQuantFamily,
@@ -141,4 +142,19 @@ test('isNonModelGguf keeps real model files', () => {
   // whose name merely contains the letters is not dropped.
   expect(isNonModelGguf('Adaptive-Reasoner-3B-Q4_K_M.gguf')).toBe(false)
   expect(isNonModelGguf('Explorator-7B-Q4_K_M.gguf')).toBe(false)
+})
+
+// Not a quality tier: Q4_0 weights repacked for ARM CPU matrix instructions.
+// Same size as a Q4_K_S that is strictly better, useless once layers are
+// offloaded to Metal, and removed from current llama.cpp.
+test('isCpuRepackGguf hides ARM CPU repacks', () => {
+  expect(isCpuRepackGguf('Hermes-3-Llama-3.2-3B-Q4_0_8_8.gguf')).toBe(true)
+  expect(isCpuRepackGguf('model-q4_0_4_4.gguf')).toBe(true)
+  expect(isCpuRepackGguf('model-Q4_0_4_8.gguf')).toBe(true)
+})
+
+test('isCpuRepackGguf keeps plain Q4_0 and the k-quants', () => {
+  expect(isCpuRepackGguf('Hermes-3-Llama-3.2-3B-Q4_0.gguf')).toBe(false)
+  expect(isCpuRepackGguf('Hermes-3-Llama-3.2-3B-Q4_K_M.gguf')).toBe(false)
+  expect(isCpuRepackGguf('Hermes-3-Llama-3.2-3B-Q4_K_S.gguf')).toBe(false)
 })

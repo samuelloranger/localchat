@@ -96,6 +96,30 @@ export function isShardedGguf(filename: string): boolean {
  */
 const NON_MODEL_GGUF = /(^|\/)(mmproj|mmproj-model)|[-_.](lora|adapter|vocab|tokenizer)[-_.]/i
 
+/**
+ * CPU-repacked Q4_0 variants: `…-Q4_0_4_4`, `-Q4_0_4_8`, `-Q4_0_8_8`.
+ *
+ * Not a quality tier — the weights are plain Q4_0 with the data pre-shuffled so
+ * ARM CPUs with i8mm/SVE matrix instructions can run block GEMM over them. Three
+ * reasons they do not belong in this list:
+ *
+ *   - quality is Q4_0's, the weakest tier, while sitting at the same file size
+ *     as a Q4_K_S that is meaningfully better;
+ *   - the speedup is CPU-only, and inference here loads with n_gpu_layers set,
+ *     so it runs on Metal;
+ *   - llama.cpp removed these layouts in favour of repacking at load time, so a
+ *     current runtime may refuse them outright.
+ *
+ * Offering a file that is both worse and may not load is a trap, so they are
+ * hidden. Kept separate from isNonModelGguf: these are real models, just not
+ * for this platform.
+ */
+const CPU_REPACK_GGUF = /q4_0_(4_4|4_8|8_8)/i
+
+export function isCpuRepackGguf(filename: string): boolean {
+  return CPU_REPACK_GGUF.test(filename.split('/').pop() ?? filename)
+}
+
 export function isNonModelGguf(filename: string): boolean {
   const base = filename.split('/').pop() ?? filename
   return NON_MODEL_GGUF.test(base)
