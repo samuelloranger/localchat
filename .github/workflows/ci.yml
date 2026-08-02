@@ -43,12 +43,12 @@ jobs:
       - name: Tests
         run: bun run test
 
-      # Cheap config gate. `expo prebuild` resolves every entry in app.json's
-      # `plugins` array; a module without an app.plugin.js fails here in ~30s
-      # instead of 20 minutes into the Android build in release.yml. Android
-      # only — it validates the same plugin list as iOS and needs no macOS runner.
+      # Cheap config gate. Resolves every entry in app.json's `plugins` array so
+      # a missing app.plugin.js fails here in ~30s instead of deep into a native
+      # build. iOS project generation on Linux is enough to validate plugins;
+      # Android release builds are currently disabled.
       - name: Validate app config (prebuild dry run)
-        run: bunx expo prebuild -p android --clean --no-install
+        run: bunx expo prebuild -p ios --clean --no-install
         env:
           CI: 'true'
 
@@ -57,60 +57,3 @@ jobs:
         # native toolchain expectations that Expo's "expected" ranges don't know
         # about, so a mismatch here is information, not a defect.
         run: bunx expo install --check || echo "::warning::expo install --check reported dependency drift"
-
-  # Populates the Gradle + CMake caches under the default-branch scope so the
-  # tag-triggered Android build in release.yml starts warm. llama.rn compiles
-  # llama.cpp from source; a cold build is roughly 15-20 minutes of CMake, and a
-  # tag run cannot read caches saved by other tags.
-  cache-warm-android:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-install-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-install-${{ runner.os }}-
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - run: bun install --frozen-lockfile
-
-      - name: Prebuild Android project
-        run: bunx expo prebuild -p android --clean
-        env:
-          CI: 'true'
-
-      # After prebuild so android/gradlew exists. cache-read-only: false forces a
-      # write from main; the action is read-only by default off PRs.
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-provider: basic
-          cache-read-only: false
-
-      # The llama.cpp object files live in android/app/.cxx, which Gradle's own
-      # cache does not cover. Keyed on the llama.rn version so a bump forces a
-      # clean rebuild rather than linking stale objects.
-      - name: Cache llama.rn native build
-        uses: actions/cache@v4
-        with:
-          path: android/app/.cxx
-          key: cxx-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            cxx-${{ runner.os }}-
-
-      # arm64-v8a only — every phone worth targeting is arm64, and building all
-      # four ABIs multiplies the CMake cost by four.
-      - name: Warm Gradle release deps
-        working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
