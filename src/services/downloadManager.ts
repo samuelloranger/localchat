@@ -21,6 +21,36 @@ export class DownloadError extends Error {
 
 const GGUF_MAGIC = 'GGUF'
 
+const B64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+/**
+ * Decode base64 to an ASCII string without Buffer or atob.
+ *
+ * Hermes provides neither. Buffer is a Node global that exists under Jest and
+ * not on device, so using it here failed every download at the verification
+ * step — after the bytes had already been transferred — with a bare
+ * ReferenceError that surfaced as the generic "download failed" message.
+ *
+ * Only ever called on the 4-byte file header, so a compact decoder is enough.
+ */
+export function base64ToAscii(b64: string): string {
+  const clean = b64.replace(/[^A-Za-z0-9+/]/g, '')
+  let bits = 0
+  let acc = 0
+  let out = ''
+  for (const ch of clean) {
+    const value = B64_ALPHABET.indexOf(ch)
+    if (value < 0) continue
+    acc = (acc << 6) | value
+    bits += 6
+    if (bits >= 8) {
+      bits -= 8
+      out += String.fromCharCode((acc >> bits) & 0xff)
+    }
+  }
+  return out
+}
+
 /** Test helper: hand-rolled Range header for transport mocks that emulate HTTP resume. */
 export function nextRangeHeader(partialBytes: number): string | undefined {
   if (partialBytes <= 0) return undefined
@@ -102,7 +132,7 @@ async function verifyPartial(partialPath: string, expectedBytes?: number): Promi
     position: 0,
     length: 4,
   })
-  const magic = Buffer.from(headerB64, 'base64').toString('ascii')
+  const magic = base64ToAscii(headerB64).slice(0, 4)
   if (magic !== GGUF_MAGIC) {
     throw new DownloadError(DownloadErrorCode.NOT_GGUF, `magic ${JSON.stringify(magic)}`)
   }

@@ -86,6 +86,7 @@ jest.mock('expo-file-system/legacy', () => {
 })
 
 import {
+  base64ToAscii,
   DownloadError,
   DownloadErrorCode,
   downloadGguf,
@@ -195,4 +196,44 @@ test('DownloadError exposes typed code', () => {
   const err = new DownloadError(DownloadErrorCode.FAILED)
   expect(err.code).toBe('DOWNLOAD_FAILED')
   expect(err).toBeInstanceOf(Error)
+})
+
+// Regression: verifyPartial decoded the header with Buffer.from(), a Node
+// global that exists under Jest and not on Hermes. Every download failed at the
+// verification step — after the full transfer — with a bare ReferenceError that
+// reached the UI as the generic "download failed" message. Run the whole happy
+// path with Buffer removed from globalThis to prove nothing depends on it.
+test('completes a download in an environment without Buffer (Hermes)', async () => {
+  const { mockPartialStore } = mockStores()
+  const payload = ggufBytes('weights', 64)
+  const destPath = `file://${mockTmpRoot}/no-buffer-model.gguf`
+
+  // The transport runs before Buffer is removed so the fixture can be staged
+  // with it; only the code under test has to survive its absence.
+  const transport = async ({ partialPath }: { partialPath: string }) => {
+    mockPartialStore.set(mockPathKey(partialPath), payload)
+    return null
+  }
+
+  const savedBuffer = globalThis.Buffer
+  // @ts-expect-error deliberately emulating a runtime with no Buffer global
+  delete globalThis.Buffer
+  try {
+    await downloadGguf({
+      url: 'https://example.test/model.gguf',
+      destPath,
+      expectedBytes: payload.length,
+      transport,
+    })
+  } finally {
+    globalThis.Buffer = savedBuffer
+  }
+
+  expect(readFileSync(mockPathKey(destPath))).toEqual(payload)
+})
+
+test('base64ToAscii decodes the GGUF magic', () => {
+  expect(base64ToAscii('R0dVRg==')).toBe('GGUF')
+  expect(base64ToAscii(Buffer.from('GGUF').toString('base64'))).toBe('GGUF')
+  expect(base64ToAscii(Buffer.from('<htm').toString('base64'))).toBe('<htm')
 })
