@@ -6,9 +6,8 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { ConfirmSheet } from '@/src/components/ConfirmSheet'
 import { EmptyState } from '@/src/components/EmptyState'
 import type { Conversation } from '@/src/domain/types'
-import { t } from '@/src/i18n'
+import { useTranslation } from '@/src/i18n/LocaleProvider'
 import * as chatStore from '@/src/services/chatStore'
-import { evaluateModelFit } from '@/src/services/deviceCapability'
 import { listInstalled } from '@/src/services/modelStore'
 import { useTheme } from '@/src/theme/ThemeProvider'
 import { typography } from '@/src/theme/typography'
@@ -17,6 +16,7 @@ export default function ChatsScreen() {
   const db = useSQLiteContext()
   const router = useRouter()
   const { colors } = useTheme()
+  const { t } = useTranslation()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [hasModel, setHasModel] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null)
@@ -24,7 +24,7 @@ export default function ChatsScreen() {
   const refresh = useCallback(async () => {
     const [list, models] = await Promise.all([chatStore.listConversations(db), listInstalled(db)])
     setConversations(list)
-    setHasModel(models.some((m) => evaluateModelFit(m.sizeBytes).fits))
+    setHasModel(models.length > 0)
   }, [db])
 
   useFocusEffect(
@@ -35,12 +35,11 @@ export default function ChatsScreen() {
 
   const onNew = async () => {
     const models = await listInstalled(db)
-    const runnable = models.filter((m) => evaluateModelFit(m.sizeBytes).fits)
-    if (!runnable.length) {
+    if (!models.length) {
       router.push('/(tabs)/models')
       return
     }
-    const preferred = [...runnable].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))[0]
+    const preferred = [...models].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))[0]
     const c = await chatStore.createConversation(db, {
       modelId: preferred.id,
       title: t('chats.new'),
@@ -53,6 +52,7 @@ export default function ChatsScreen() {
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={t('chats.new')}
           disabled={!hasModel}
           onPress={() => void onNew()}
           style={({ pressed }) => [
@@ -86,6 +86,12 @@ export default function ChatsScreen() {
         }
         renderItem={({ item }) => (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            accessibilityActions={[{ name: 'delete', label: t('chats.deleteConfirm') }]}
+            onAccessibilityAction={(event) => {
+              if (event.nativeEvent.actionName === 'delete') setPendingDelete(item)
+            }}
             onPress={() => router.push(`/chat/${item.id}`)}
             onLongPress={() => setPendingDelete(item)}
             style={({ pressed }) => [

@@ -1,11 +1,12 @@
 import { MessageCircle, Boxes, Settings } from 'lucide-react-native'
 import { Tabs } from 'expo-router'
 
-import { t } from '@/src/i18n'
+import { useTranslation } from '@/src/i18n/LocaleProvider'
 import { useTheme } from '@/src/theme/ThemeProvider'
 
 export default function TabLayout() {
   const { colors } = useTheme()
+  const { t } = useTranslation()
 
   return (
     <Tabs

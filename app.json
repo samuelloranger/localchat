@@ -8,7 +8,8 @@
     "scheme": "localchat",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.samuelloranger.localchat"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.samuelloranger.localchat"
     },
     "web": {
       "bundler": "metro",
@@ -27,7 +29,6 @@
     "plugins": [
       "expo-router",
       "expo-localization",
-      "expo-device",
       [
         "expo-splash-screen",
         {
@@ -42,14 +43,14 @@
           "enableEntitlements": true,
           "entitlementsProfile": "production",
           "forceCxx20": true,
-          "enableOpenCL": true
+          "enableOpenCLAndHexagon": true
         }
       ],
       [
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "16.4"
           },
           "android": {
             "minSdkVersion": 24

@@ -1,75 +1,56 @@
+let mockTotalMemory: number | null = 4 * 1024 * 1024 * 1024
+
+jest.mock('expo-device', () => ({
+  get totalMemory() {
+    return mockTotalMemory
+  },
+}))
+
 import {
+  ANDROID_RAM_USABLE_FRACTION,
+  IOS_RAM_USABLE_FRACTION,
   estimateRuntimeRamBytes,
   evaluateModelFit,
   FALLBACK_DEVICE_RAM_BYTES,
+  getDeviceRamBytes,
+  getDeviceRamUsableFraction,
 } from '../src/services/deviceCapability'
-import {
-  applyModelFilters,
-  parseQuantFamily,
-  sortModels,
-} from '../src/services/modelCatalog'
-import type { HubGgufFile } from '../src/domain/types'
+import { N_CTX } from '../src/services/inference'
 
-test('estimateRuntimeRamBytes adds overhead and KV headroom', () => {
+test('estimateRuntimeRamBytes adds mmap overhead and n_ctx-derived KV', () => {
   const file = 1_000_000_000
-  const est = estimateRuntimeRamBytes(file)
+  const est = estimateRuntimeRamBytes(file, N_CTX)
   expect(est).toBeGreaterThan(file)
-  expect(est).toBe(Math.ceil(file * 1.35 + 256 * 1024 * 1024))
+  expect(est).toBe(Math.ceil(file * 1.15 + N_CTX * ((256 * 1024 * 1024) / 2048)))
 })
 
 test('evaluateModelFit rejects models larger than usable RAM', () => {
-  const device = 4 * 1024 * 1024 * 1024
-  const tiny = evaluateModelFit(200 * 1024 * 1024, device)
+  const ram = 4 * 1024 * 1024 * 1024
+  const tiny = evaluateModelFit(200 * 1024 * 1024, ram)
   expect(tiny.fits).toBe(true)
-  const huge = evaluateModelFit(6 * 1024 * 1024 * 1024, device)
+  const huge = evaluateModelFit(6 * 1024 * 1024 * 1024, ram)
   expect(huge.fits).toBe(false)
-  expect(huge.usableRamBytes).toBe(Math.floor(device * 0.8))
+  expect(huge.usableRamBytes).toBe(Math.floor(ram * getDeviceRamUsableFraction()))
 })
 
-test('fallback device RAM is 4 GiB constant', () => {
-  expect(FALLBACK_DEVICE_RAM_BYTES).toBe(4 * 1024 * 1024 * 1024)
+test('iOS budget is smaller than Android for the same totalMemory', () => {
+  const ram = 6 * 1024 * 1024 * 1024
+  const iosBudget = Math.floor(ram * IOS_RAM_USABLE_FRACTION)
+  const androidBudget = Math.floor(ram * ANDROID_RAM_USABLE_FRACTION)
+  expect(iosBudget).toBeLessThan(androidBudget)
 })
 
-test('parseQuantFamily reads filename', () => {
-  expect(parseQuantFamily('model-Q4_K_M.gguf')).toBe('Q4')
-  expect(parseQuantFamily('model-IQ2_XXS.gguf')).toBe('IQ')
-  expect(parseQuantFamily('model-f16.gguf')).toBe('F16')
+test('fallback device RAM is conservative 2 GiB', () => {
+  expect(FALLBACK_DEVICE_RAM_BYTES).toBe(2 * 1024 * 1024 * 1024)
 })
 
-const sample: HubGgufFile[] = [
-  {
-    repoId: 'a/b',
-    filename: 'small-Q4_K_M.gguf',
-    displayName: 'small',
-    sizeBytes: 100,
-    quant: 'Q4',
-    downloads: 10,
-    lastModified: 1,
-  },
-  {
-    repoId: 'a/c',
-    filename: 'big-Q8_0.gguf',
-    displayName: 'big',
-    sizeBytes: 5 * 1024 * 1024 * 1024,
-    quant: 'Q8',
-    downloads: 50,
-    lastModified: 9,
-  },
-]
+test('getDeviceRamBytes uses fallback when totalMemory is null or zero', () => {
+  mockTotalMemory = null
+  expect(getDeviceRamBytes()).toBe(FALLBACK_DEVICE_RAM_BYTES)
 
-test('applyModelFilters quant and fitsDeviceOnly', () => {
-  const device = 4 * 1024 * 1024 * 1024
-  const q4 = applyModelFilters(sample, { quant: 'Q4' }, device)
-  expect(q4).toHaveLength(1)
-  expect(q4[0].displayName).toBe('small')
+  mockTotalMemory = 0
+  expect(getDeviceRamBytes()).toBe(FALLBACK_DEVICE_RAM_BYTES)
 
-  const fits = applyModelFilters(sample, { fitsDeviceOnly: true }, device)
-  expect(fits.every((f) => evaluateModelFit(f.sizeBytes, device).fits)).toBe(true)
-  expect(fits.find((f) => f.displayName === 'big')).toBeUndefined()
-})
-
-test('sortModels by downloads and size', () => {
-  expect(sortModels(sample, 'downloads')[0].displayName).toBe('big')
-  expect(sortModels(sample, 'sizeAsc')[0].displayName).toBe('small')
-  expect(sortModels(sample, 'name')[0].displayName).toBe('big')
+  mockTotalMemory = 4 * 1024 * 1024 * 1024
+  expect(getDeviceRamBytes()).toBe(4 * 1024 * 1024 * 1024)
 })

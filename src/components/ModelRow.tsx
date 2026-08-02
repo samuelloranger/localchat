@@ -6,32 +6,43 @@ import { typography } from '@/src/theme/typography'
 type Props = {
   title: string
   subtitle: string
+  accessibilityHint?: string
   progress?: number | null
   primaryLabel: string
   onPrimary: () => void
   secondaryLabel?: string
   onSecondary?: () => void
   disabled?: boolean
-  /** Soft visual mute when the model cannot run (still shown). */
+  /** Blocks the primary action (e.g. another download in progress). */
+  blockPrimary?: boolean
+  /** Soft visual mute when the model may not fit RAM — does not block the button. */
   unfit?: boolean
   warning?: string
+  downloadError?: string
+  onRetryDownload?: () => void
+  retryLabel?: string
 }
 
 export function ModelRow({
   title,
   subtitle,
+  accessibilityHint,
   progress,
   primaryLabel,
   onPrimary,
   secondaryLabel,
   onSecondary,
   disabled,
+  blockPrimary,
   unfit,
   warning,
+  downloadError,
+  onRetryDownload,
+  retryLabel,
 }: Props) {
   const { colors } = useTheme()
   const busy = typeof progress === 'number'
-  const blocked = disabled || busy || !!unfit
+  const blocked = disabled || busy || !!blockPrimary
 
   return (
     <View
@@ -39,12 +50,19 @@ export function ModelRow({
         styles.row,
         { borderBottomColor: colors.border, opacity: unfit ? 0.72 : 1 },
       ]}
+      accessibilityRole="none"
+      accessibilityHint={accessibilityHint}
     >
       <View style={styles.meta}>
-        <Text style={[styles.title, { color: colors.foreground, fontFamily: typography.bodySemiBoldFamily }]}>
+        <Text
+          style={[styles.title, { color: colors.foreground, fontFamily: typography.bodySemiBoldFamily }]}
+          accessibilityRole="header"
+        >
           {title}
         </Text>
-        <Text style={[styles.sub, { color: colors.foreground, fontFamily: typography.bodyFamily }]}>
+        <Text
+          style={[styles.sub, { color: colors.mutedForeground, fontFamily: typography.bodyFamily }]}
+        >
           {subtitle}
         </Text>
         {warning ? (
@@ -55,19 +73,44 @@ export function ModelRow({
             {warning}
           </Text>
         ) : null}
+        {downloadError ? (
+          <View style={styles.errorRow}>
+            <Text
+              style={[styles.warn, { color: colors.destructive, fontFamily: typography.bodyMediumFamily }]}
+              accessibilityRole="alert"
+            >
+              {downloadError}
+            </Text>
+            {onRetryDownload && retryLabel ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onRetryDownload}
+                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1, minHeight: 44, justifyContent: 'center' }]}
+              >
+                <Text style={{ color: colors.primary, fontFamily: typography.bodyMediumFamily }}>
+                  {retryLabel}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
         {busy ? (
-          <View style={[styles.barTrack, { backgroundColor: colors.border }]}>
+          <View
+            style={[styles.barTrack, { backgroundColor: colors.border }]}
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round((progress ?? 0) * 100) }}
+          >
             <View
               style={[
                 styles.barFill,
-                { width: `${Math.round(progress * 100)}%`, backgroundColor: colors.primary },
+                { width: `${Math.round((progress ?? 0) * 100)}%`, backgroundColor: colors.primary },
               ]}
             />
           </View>
         ) : null}
       </View>
       <View style={styles.actions}>
-        {busy ? <ActivityIndicator color={colors.primary} /> : null}
+        {busy ? <ActivityIndicator color={colors.primary} accessibilityLabel={primaryLabel} /> : null}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: blocked }}
@@ -122,8 +165,9 @@ const styles = StyleSheet.create({
   },
   meta: { flex: 1, gap: 4 },
   title: { fontSize: 16 },
-  sub: { fontSize: 13, opacity: 0.75 },
+  sub: { fontSize: 13 },
   warn: { fontSize: 12, marginTop: 2 },
+  errorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   barTrack: { height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 6 },
   barFill: { height: 4 },
   actions: { flexDirection: 'row', gap: 8, alignItems: 'center' },

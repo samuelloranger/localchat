@@ -33,3 +33,24 @@ test('completeChat without load throws NO_MODEL_LOADED', async () => {
     inference.completeChat({ messages: [], onToken: () => {} }),
   ).rejects.toThrow('NO_MODEL_LOADED')
 })
+
+test('loadModel retries with n_gpu_layers 0 after GPU init failure', async () => {
+  const initLlamaMock = initLlama as jest.Mock
+  initLlamaMock.mockReset()
+  initLlamaMock
+    .mockRejectedValueOnce(new Error('GPU init failed'))
+    .mockResolvedValueOnce({
+      completion: jest.fn(),
+      stopCompletion: jest.fn(),
+      release: jest.fn(),
+      gpu: false,
+    })
+
+  await inference.unloadModel()
+  await inference.loadModel('/tmp/gpu-fail.gguf')
+
+  expect(initLlamaMock).toHaveBeenCalledTimes(2)
+  expect(initLlamaMock.mock.calls[0][0].n_gpu_layers).toBe(99)
+  expect(initLlamaMock.mock.calls[1][0].n_gpu_layers).toBe(0)
+  expect(initLlamaMock.mock.calls[1][0].use_mmap).toBe(true)
+})

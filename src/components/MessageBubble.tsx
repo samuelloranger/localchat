@@ -1,6 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
+import { useCallback } from 'react'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { MessageRole } from '@/src/domain/types'
+import { useTranslation } from '@/src/i18n/LocaleProvider'
 import { useTheme } from '@/src/theme/ThemeProvider'
 import { typography } from '@/src/theme/typography'
 
@@ -12,29 +15,47 @@ type Props = {
 
 export function MessageBubble({ role, content, status }: Props) {
   const { colors } = useTheme()
+  const { t } = useTranslation()
   const mine = role === 'user'
+  const label = mine ? t('chat.userMessage') : t('chat.assistantMessage')
+
+  const onLongPress = useCallback(() => {
+    if (!content.trim()) return
+    void Clipboard.setStringAsync(content).then(() => {
+      Alert.alert(t('chat.copy'))
+    })
+  }, [content, t])
+
   return (
     <View style={[styles.row, mine ? styles.right : styles.left]}>
-      <View
-        style={[
-          styles.bubble,
-          {
-            backgroundColor: mine ? colors.primary : colors.muted,
-            borderColor: colors.border,
-          },
-        ]}
+      <Pressable
+        accessibilityRole="text"
+        accessibilityLabel={label}
+        onLongPress={onLongPress}
+        delayLongPress={400}
       >
-        <Text
-          style={{
-            color: mine ? colors.onPrimary : colors.foreground,
-            fontFamily: typography.bodyFamily,
-            fontSize: 16,
-            lineHeight: 24,
-          }}
+        <View
+          style={[
+            styles.bubble,
+            {
+              backgroundColor: mine ? colors.primary : colors.muted,
+              borderColor: colors.border,
+            },
+          ]}
         >
-          {content || (status === 'streaming' ? '…' : '')}
-        </Text>
-      </View>
+          <Text
+            selectable
+            style={{
+              color: mine ? colors.onPrimary : colors.foreground,
+              fontFamily: typography.bodyFamily,
+              fontSize: 16,
+              lineHeight: 24,
+            }}
+          >
+            {content || (status === 'streaming' ? '…' : '')}
+          </Text>
+        </View>
+      </Pressable>
     </View>
   )
 }

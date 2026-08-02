@@ -12,11 +12,12 @@ import {
 import { Stack } from 'expo-router'
 import { SQLiteProvider } from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import 'react-native-reanimated'
 
 import { migrateDbIfNeeded } from '@/src/db/migrate'
-import { setLocale } from '@/src/i18n'
+import type { LocalePreference } from '@/src/i18n'
+import { LocaleProvider } from '@/src/i18n/LocaleProvider'
 import { loadAppearance, loadLocale } from '@/src/services/preferences'
 import { ThemeProvider, useTheme } from '@/src/theme/ThemeProvider'
 
@@ -28,16 +29,31 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync()
 
-function BootstrapPrefs({ children }: { children: ReactNode }) {
+function BootstrapPrefs({
+  children,
+  onReady,
+}: {
+  children: (prefs: { appearance: Awaited<ReturnType<typeof loadAppearance>>; locale: LocalePreference }) => ReactNode
+  onReady: () => void
+}) {
   const { setAppearance } = useTheme()
+  const [prefs, setPrefs] = useState<{
+    appearance: Awaited<ReturnType<typeof loadAppearance>>
+    locale: LocalePreference
+  } | null>(null)
+
   useEffect(() => {
     void (async () => {
       const [appearance, locale] = await Promise.all([loadAppearance(), loadLocale()])
       setAppearance(appearance)
-      setLocale(locale)
+      setPrefs({ appearance, locale })
+      onReady()
     })()
-  }, [setAppearance])
-  return children
+  }, [setAppearance, onReady])
+
+  if (!prefs) return null
+
+  return <>{children(prefs)}</>
 }
 
 export default function RootLayout() {
@@ -50,6 +66,7 @@ export default function RootLayout() {
     Raleway_500Medium,
     Raleway_600SemiBold,
   })
+  const [prefsReady, setPrefsReady] = useState(false)
 
   const loaded = loraLoaded && ralewayLoaded
   const error = loraError ?? ralewayError
@@ -59,10 +76,12 @@ export default function RootLayout() {
   }, [error])
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync()
+    if (loaded && prefsReady) {
+      void SplashScreen.hideAsync().catch(() => {
+        // Splash may already be hidden
+      })
     }
-  }, [loaded])
+  }, [loaded, prefsReady])
 
   if (!loaded) {
     return null
@@ -70,10 +89,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <BootstrapPrefs>
-        <SQLiteProvider databaseName="localchat.db" onInit={migrateDbIfNeeded}>
-          <RootLayoutNav />
-        </SQLiteProvider>
+      <BootstrapPrefs onReady={() => setPrefsReady(true)}>
+        {(prefs) => (
+          <LocaleProvider initialLocale={prefs.locale}>
+            <SQLiteProvider databaseName="localchat.db" onInit={migrateDbIfNeeded}>
+              <RootLayoutNav />
+            </SQLiteProvider>
+          </LocaleProvider>
+        )}
       </BootstrapPrefs>
     </ThemeProvider>
   )

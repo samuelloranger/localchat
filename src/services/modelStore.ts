@@ -1,8 +1,9 @@
 import type { SQLiteDatabase } from 'expo-sqlite'
 import * as FileSystem from 'expo-file-system/legacy'
+import { Platform } from 'react-native'
 
 import type { InstalledModel } from '@/src/domain/types'
-import { evaluateModelFit } from '@/src/services/deviceCapability'
+import { type FitResult } from '@/src/services/deviceCapability'
 import { downloadGguf } from '@/src/services/downloadManager'
 import { downloadUrl } from '@/src/services/hfHub'
 
@@ -34,10 +35,22 @@ export function modelIdFor(repoId: string, filename: string): string {
   return `${repoId}/${filename}`
 }
 
+/** Models live outside iCloud-backed Documents (Application Support on iOS). */
+export function modelsDirectory(): string {
+  const base = FileSystem.documentDirectory ?? 'file:///tmp/'
+  if (Platform.OS === 'ios') {
+    const dir = base.replace(/\/Documents\/?$/, '/Library/Application Support/LocalChat/models/')
+    return dir.endsWith('/') ? dir : `${dir}/`
+  }
+  if (base.includes('/Documents/')) {
+    return base.replace('/Documents/', '/models/')
+  }
+  return `${base}../models/`
+}
+
 export function modelFilePath(modelId: string): string {
   const safe = modelId.replace(/[^a-zA-Z0-9._-]+/g, '__')
-  const base = FileSystem.documentDirectory ?? 'file:///tmp/'
-  return `${base}models/${safe}.gguf`
+  return `${modelsDirectory()}${safe}.gguf`
 }
 
 export async function listInstalled(db: SQLiteDatabase): Promise<InstalledModel[]> {
@@ -46,7 +59,16 @@ export async function listInstalled(db: SQLiteDatabase): Promise<InstalledModel[
      FROM models
      ORDER BY downloaded_at DESC`,
   )
-  return rows.map(mapModel)
+  const installed: InstalledModel[] = []
+  for (const row of rows) {
+    const info = await FileSystem.getInfoAsync(row.local_path)
+    if (info.exists) {
+      installed.push(mapModel(row))
+    } else {
+      await db.runAsync(`DELETE FROM models WHERE id = ?`, row.id)
+    }
+  }
+  return installed
 }
 
 export async function recordInstalled(
@@ -81,8 +103,21 @@ export async function removeInstalled(db: SQLiteDatabase, id: string): Promise<v
   if (row) {
     await FileSystem.deleteAsync(row.local_path, { idempotent: true })
     await FileSystem.deleteAsync(`${row.local_path}.partial`, { idempotent: true })
+    await FileSystem.deleteAsync(`${row.local_path}.resume.json`, { idempotent: true })
   }
   await db.runAsync(`DELETE FROM models WHERE id = ?`, id)
+}
+
+export class ModelTooLargeError extends Error {
+  readonly fit: FitResult
+
+  constructor(fit: FitResult) {
+    super(
+      `MODEL_TOO_LARGE: needs ~${fit.estimatedRamBytes} bytes, device usable ${fit.usableRamBytes}`,
+    )
+    this.name = 'ModelTooLargeError'
+    this.fit = fit
+  }
 }
 
 export async function installFromHub(
@@ -96,13 +131,6 @@ export async function installFromHub(
     signal?: AbortSignal
   },
 ): Promise<InstalledModel> {
-  const fit = evaluateModelFit(params.sizeBytes)
-  if (!fit.fits) {
-    throw new Error(
-      `MODEL_TOO_LARGE: needs ~${fit.estimatedRamBytes} bytes, device usable ${fit.usableRamBytes}`,
-    )
-  }
-
   const id = modelIdFor(params.repoId, params.filename)
   const localPath = modelFilePath(id)
   const url = downloadUrl(params.repoId, params.filename)

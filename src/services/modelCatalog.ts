@@ -14,12 +14,12 @@ export type ModelBrowseFilters = {
 
 const QUANT_PATTERNS: Array<{ family: QuantFamily; re: RegExp }> = [
   { family: 'IQ', re: /iq\d/i },
-  { family: 'Q2', re: /q2[_-]/i },
-  { family: 'Q3', re: /q3[_-]/i },
-  { family: 'Q4', re: /q4[_-]/i },
-  { family: 'Q5', re: /q5[_-]/i },
-  { family: 'Q6', re: /q6[_-]/i },
-  { family: 'Q8', re: /q8[_-]/i },
+  { family: 'Q2', re: /q2(?=[_\-.]|$)/i },
+  { family: 'Q3', re: /q3(?=[_\-.]|$)/i },
+  { family: 'Q4', re: /q4(?=[_\-.]|$)/i },
+  { family: 'Q5', re: /q5(?=[_\-.]|$)/i },
+  { family: 'Q6', re: /q6(?=[_\-.]|$)/i },
+  { family: 'Q8', re: /q8(?=[_\-.]|$)/i },
   { family: 'F16', re: /f16|fp16/i },
 ]
 
@@ -37,28 +37,30 @@ export function withCatalogFields(file: HubGgufFile): HubGgufFile {
   }
 }
 
+function tokenizeQuery(query: string): string[] {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+}
+
 export function applyModelFilters(
   files: HubGgufFile[],
   filters: ModelBrowseFilters,
   deviceRamBytes: number,
 ): HubGgufFile[] {
-  const q = filters.query?.trim().toLowerCase() ?? ''
+  const tokens = filters.query ? tokenizeQuery(filters.query) : []
   const quant = filters.quant ?? 'any'
   const maxSize = filters.maxSizeBytes
   const fitsOnly = filters.fitsDeviceOnly ?? false
 
   return files.filter((file) => {
-    const enriched = withCatalogFields(file)
-    if (q) {
-      const hay = `${enriched.displayName} ${enriched.repoId} ${enriched.filename}`.toLowerCase()
-      if (!hay.includes(q)) return false
+    if (tokens.length > 0) {
+      const hay = `${file.displayName} ${file.repoId} ${file.filename}`.toLowerCase()
+      if (!tokens.every((token) => hay.includes(token))) return false
     }
-    if (quant !== 'any' && (enriched.quant ?? parseQuantFamily(enriched.filename)) !== quant) {
-      return false
-    }
-    if (typeof maxSize === 'number' && enriched.sizeBytes > maxSize) return false
+    const fileQuant = file.quant ?? parseQuantFamily(file.filename)
+    if (quant !== 'any' && fileQuant !== quant) return false
+    if (typeof maxSize === 'number' && file.sizeBytes > maxSize) return false
     if (fitsOnly) {
-      const fit = evaluateModelFit(enriched.sizeBytes, deviceRamBytes)
+      const fit = evaluateModelFit(file.sizeBytes, deviceRamBytes)
       if (!fit.fits) return false
     }
     return true
@@ -79,7 +81,11 @@ export function sortModels(files: HubGgufFile[], sort: ModelSortKey): HubGgufFil
         return (b.lastModified ?? 0) - (a.lastModified ?? 0)
       case 'downloads':
       default:
-        return (b.downloads ?? 0) - (a.downloads ?? 0) || a.displayName.localeCompare(b.displayName)
+        return (
+          (b.downloads ?? 0) - (a.downloads ?? 0) ||
+          a.sizeBytes - b.sizeBytes ||
+          a.displayName.localeCompare(b.displayName)
+        )
     }
   })
   return copy

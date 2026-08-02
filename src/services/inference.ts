@@ -1,6 +1,13 @@
 import { initLlama, type LlamaContext } from 'llama.rn'
 
 import type { MessageRole } from '@/src/domain/types'
+import {
+  CONTEXT_SAFETY_MARGIN,
+  N_CTX,
+  N_PREDICT,
+} from '@/src/services/inferenceConstants'
+
+export { CONTEXT_SAFETY_MARGIN, N_CTX, N_PREDICT }
 
 let ctx: LlamaContext | null = null
 let path: string | null = null
@@ -23,15 +30,23 @@ export async function loadModel(
 ): Promise<void> {
   if (path === localPath && ctx) return
   await unloadModel()
-  ctx = await initLlama(
-    {
-      model: toFileUri(localPath),
-      n_ctx: 2048,
-      n_gpu_layers: 99,
-      use_mmap: true,
-    },
-    onProgress,
-  )
+
+  const baseOptions = {
+    model: toFileUri(localPath),
+    n_ctx: N_CTX,
+    n_gpu_layers: 99,
+    use_mmap: true,
+  }
+
+  try {
+    ctx = await initLlama(baseOptions, onProgress)
+  } catch (firstError) {
+    if (baseOptions.n_gpu_layers > 0) {
+      ctx = await initLlama({ ...baseOptions, n_gpu_layers: 0 }, onProgress)
+    } else {
+      throw firstError
+    }
+  }
   path = localPath
 }
 
@@ -51,7 +66,7 @@ export async function completeChat(params: {
   const result = await ctx.completion(
     {
       messages: params.messages,
-      n_predict: 512,
+      n_predict: N_PREDICT,
       temperature: 0.7,
       stop: ['</s>', '<|end|>', '<|im_end|>', '<|eot_id|>'],
     },

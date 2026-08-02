@@ -4,8 +4,8 @@ import { parseQuantFamily } from '@/src/services/modelCatalog'
 /** Soft cap for browsing (show larger files as disabled if they don't fit RAM). */
 export const BROWSE_MAX_BYTES = 8 * 1024 * 1024 * 1024
 
-/** Legacy alias used by download paths that still prefer phone-friendly files. */
-export const MAX_GGUF_BYTES = BROWSE_MAX_BYTES
+const TREE_FETCH_CONCURRENCY = 6
+const SEARCH_REPO_LIMIT = 8
 
 /** Common public instruct GGUF repos for the default Models list. */
 export const CURATED_REPOS = [
@@ -73,11 +73,17 @@ export function filterGgufEntries(
 
 export async function listRepoGgufFiles(
   repoId: string,
-  opts?: { maxBytes?: number; downloads?: number; lastModified?: number },
+  opts?: {
+    maxBytes?: number
+    downloads?: number
+    lastModified?: number
+    signal?: AbortSignal
+  },
 ): Promise<HubGgufFile[]> {
   const maxBytes = opts?.maxBytes ?? BROWSE_MAX_BYTES
   const res = await fetch(`https://huggingface.co/api/models/${repoId}/tree/main`, {
     headers: { Accept: 'application/json' },
+    signal: opts?.signal,
   })
   if (!res.ok) {
     throw new Error(`HUB_TREE_FAILED:${res.status}`)
@@ -89,10 +95,14 @@ export async function listRepoGgufFiles(
   })
 }
 
-async function fetchModelCard(repoId: string): Promise<HubModelCard | null> {
+async function fetchModelCard(
+  repoId: string,
+  signal?: AbortSignal,
+): Promise<HubModelCard | null> {
   try {
     const res = await fetch(`https://huggingface.co/api/models/${repoId}`, {
       headers: { Accept: 'application/json' },
+      signal,
     })
     if (!res.ok) return null
     return (await res.json()) as HubModelCard
@@ -110,47 +120,74 @@ function cardMeta(card: HubModelCard | null): { downloads?: number; lastModified
   }
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let nextIndex = 0
+
+  async function worker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const index = nextIndex++
+      results[index] = await fn(items[index])
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker())
+  await Promise.all(workers)
+  return results
+}
+
 export async function searchGgufModels(
   query: string,
-  opts?: { maxBytes?: number },
+  opts?: { maxBytes?: number; signal?: AbortSignal },
 ): Promise<HubGgufFile[]> {
   const maxBytes = opts?.maxBytes ?? BROWSE_MAX_BYTES
+  const signal = opts?.signal
   const q = query.trim()
 
   if (!q) {
-    const batches = await Promise.all(
-      CURATED_REPOS.map(async (repoId) => {
+    const batches = await mapWithConcurrency(
+      [...CURATED_REPOS],
+      TREE_FETCH_CONCURRENCY,
+      async (repoId: string) => {
         try {
-          const card = await fetchModelCard(repoId)
-          return await listRepoGgufFiles(repoId, { maxBytes, ...cardMeta(card) })
+          const card = await fetchModelCard(repoId, signal)
+          return await listRepoGgufFiles(repoId, { maxBytes, signal, ...cardMeta(card) })
         } catch {
           return [] as HubGgufFile[]
         }
-      }),
+      },
     )
     return batches.flat()
   }
 
   const url = `https://huggingface.co/api/models?search=${encodeURIComponent(q)}&filter=gguf&limit=25&full=true&sort=downloads&direction=-1`
-  const res = await fetch(url, { headers: { Accept: 'application/json' } })
+  const res = await fetch(url, { headers: { Accept: 'application/json' }, signal })
   if (!res.ok) {
     throw new Error(`HUB_SEARCH_FAILED:${res.status}`)
   }
-  const models = (await res.json()) as HubModelCard[]
+  const models = ((await res.json()) as HubModelCard[]).slice(0, SEARCH_REPO_LIMIT)
   const files: HubGgufFile[] = []
-  for (const model of models) {
-    if (!model.id) continue
+
+  const repoFiles = await mapWithConcurrency(models, TREE_FETCH_CONCURRENCY, async (model) => {
+    if (!model.id) return [] as HubGgufFile[]
     try {
-      const repoFiles = await listRepoGgufFiles(model.id, {
+      const listed = await listRepoGgufFiles(model.id, {
         maxBytes,
+        signal,
         ...cardMeta(model),
       })
-      // Prefer smaller quants first within a repo for mobile browsing
-      const preferred = [...repoFiles].sort((a, b) => a.sizeBytes - b.sizeBytes).slice(0, 4)
-      files.push(...preferred)
+      return [...listed].sort((a, b) => a.sizeBytes - b.sizeBytes).slice(0, 4)
     } catch {
-      // skip repos that fail tree listing
+      return [] as HubGgufFile[]
     }
+  })
+
+  for (const batch of repoFiles) {
+    files.push(...batch)
   }
   return files
 }

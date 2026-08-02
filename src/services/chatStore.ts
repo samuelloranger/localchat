@@ -1,9 +1,10 @@
+import { randomUUID } from 'expo-crypto'
 import type { SQLiteDatabase } from 'expo-sqlite'
 
 import type { Conversation, Message, MessageRole, MessageStatus } from '@/src/domain/types'
 
 function newId(): string {
-  return globalThis.crypto.randomUUID()
+  return randomUUID()
 }
 
 type ConversationRow = {

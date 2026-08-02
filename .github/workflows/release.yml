@@ -1,0 +1,256 @@
+name: Release builds
+
+# Purpose: produce sideloadable binaries — an Android APK and an UNSIGNED iOS
+# IPA — so the app can be put on a real device before any TestFlight or store
+# involvement. llama.rn does not run in Expo Go and inference cannot be
+# exercised in a simulator in any meaningful way, so a real build on real
+# hardware is the only way to know whether this app works at all.
+#
+# Two ways to run it:
+#
+#   1. Manual (workflow_dispatch) — the normal path while iterating. Builds the
+#      chosen platform and uploads the result as a workflow artifact. No release,
+#      no tag, nothing public. Download the artifact from the run's summary page.
+#
+#   2. Tag push (vX.Y.Z) — opens a DRAFT release, attaches both artifacts, and
+#      only publishes once every build leg has succeeded. A failed leg therefore
+#      cannot become `releases/latest`.
+#
+# Caches: a tag run can restore from the default branch only, never from a
+# sibling tag. ci.yml's cache-warm-android job populates that scope on every push
+# to main; without it each release is a cold llama.cpp compile.
+#
+# SIGNING — read before distributing anything from here:
+#   * iOS: the IPA is built with CODE_SIGNING_ALLOWED=NO. It is deliberately
+#     unsigned, which is what AltStore / Sideloadly / SideStore expect — they
+#     re-sign with your own Apple ID on install. It will NOT install by any other
+#     route, and it is not a TestFlight build.
+#   * Android: the APK is signed with the PUBLIC React Native template debug
+#     keystore that `expo prebuild` generates. That is fine for sideloading onto
+#     your own device. It provides no authenticity, and an app installed with it
+#     cannot later be updated in place by a properly-signed build. Do not
+#     distribute it. See the TODO on the Android job to wire real signing.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which sideload artifact to build
+        type: choice
+        options:
+          - android
+          - ios
+          - both
+        default: android
+
+permissions:
+  contents: write
+
+# On a tag push github.ref_name IS vX.Y.Z; on a manual run it is the branch name
+# and TAG goes unused.
+env:
+  TAG: ${{ github.ref_name }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  # Opens the draft that the build jobs upload into and hands them its id. Runs
+  # on manual dispatch too — as a no-op — so `needs: draft` never resolves to
+  # "skipped", which would skip everything downstream of it.
+  draft:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.open.outputs.id }}
+    steps:
+      - name: Open draft release
+        id: open
+        if: github.event_name == 'push'
+        run: |
+          # Idempotent: re-running a failed workflow reuses the existing draft
+          # instead of erroring on a duplicate tag.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Reusing existing release $TAG"
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --draft --verify-tag \
+              --notes 'Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID. The Android APK is debug-keystore signed and is not for distribution.'
+          fi
+          echo "id=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json databaseId -q .databaseId)" >> "$GITHUB_OUTPUT"
+
+  android:
+    needs: draft
+    if: github.event_name == 'push' || inputs.platform == 'android' || inputs.platform == 'both'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-install-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-install-${{ runner.os }}-
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      # app.json is the source of truth for the version; on a tag run the tag
+      # wins so the installed build reports the version it was cut from.
+      - name: Pin app version to the release tag
+        if: github.event_name == 'push'
+        run: |
+          V="${TAG#v}"
+          jq --arg v "$V" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
+
+      # ios/ and android/ are gitignored, so every run regenerates them. --clean
+      # guarantees no stale native config survives an app.json change.
+      - name: Prebuild Android project
+        run: bunx expo prebuild -p android --clean
+        env:
+          CI: 'true'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-provider: basic
+          cache-read-only: false
+
+      - name: Cache llama.rn native build
+        uses: actions/cache@v4
+        with:
+          path: android/app/.cxx
+          key: cxx-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            cxx-${{ runner.os }}-
+
+      # TODO(signing): this ships the RN template DEBUG keystore. To sign
+      # properly, add repo secrets ANDROID_KEYSTORE_BASE64 /
+      # ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD,
+      # decode the keystore into android/app before this step, and point the
+      # release signingConfig at it. Note that `expo prebuild --clean`
+      # regenerates android/app/build.gradle on every run, so the signing config
+      # has to be injected by a config plugin or patched here — not committed.
+      #
+      # arm64-v8a only: llama.rn compiles llama.cpp per ABI, and the other three
+      # are dead weight for phone sideloading.
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk localchat.apk
+
+      - name: Attach APK to release
+        if: github.event_name == 'push'
+        run: gh release upload "$TAG" localchat.apk --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Upload APK workflow artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: localchat-android-${{ github.sha }}
+          path: localchat.apk
+          if-no-files-found: error
+
+  ios:
+    needs: draft
+    if: github.event_name == 'push' || inputs.platform == 'ios' || inputs.platform == 'both'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-install-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-install-${{ runner.os }}-
+
+      # Expo SDK 57's SPM dependencies need a recent Swift; the image default
+      # Xcode is often a release behind.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Pin app version to the release tag
+        if: github.event_name == 'push'
+        run: |
+          V="${TAG#v}"
+          jq --arg v "$V" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
+
+      - name: Prebuild iOS project
+        run: bunx expo prebuild -p ios --clean
+        env:
+          CI: 'true'
+
+      # CocoaPods artifacts and the llama.rn Xcode derived data are the
+      # expensive parts. Pods are regenerated by prebuild, so only the download
+      # cache is worth keeping.
+      - uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      # Unsigned on purpose — see the header. The llama.rn config plugin sets
+      # entitlementsProfile: production, which requests the increased-memory
+      # entitlement; that entitlement is recorded in the archive and is applied
+      # when the sideloader re-signs, provided the signing Apple ID is entitled
+      # to it. A free Apple ID is not, and the app will run with the standard
+      # memory limit — which matters here, because that limit is exactly what
+      # bounds the model size the device can load.
+      - name: Build unsigned archive
+        run: |
+          xcodebuild -workspace ios/LocalChat.xcworkspace -scheme LocalChat \
+            -configuration Release -sdk iphoneos \
+            -archivePath build/LocalChat.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      # An IPA is just a zip with the .app under Payload/. Since the archive is
+      # unsigned there is nothing for `xcodebuild -exportArchive` to do, and it
+      # would demand an export options plist and a signing identity we do not
+      # have.
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R "build/LocalChat.xcarchive/Products/Applications/LocalChat.app" Payload/
+          zip -qry localchat.ipa Payload
+
+      - name: Attach IPA to release
+        if: github.event_name == 'push'
+        run: gh release upload "$TAG" localchat.ipa --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Upload IPA workflow artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: localchat-ios-${{ github.sha }}
+          path: localchat.ipa
+          if-no-files-found: error
+
+  # The gate: the release leaves draft only when both artifacts exist. Until
+  # then `releases/latest` still points at the last good release.
+  publish:
+    if: github.event_name == 'push'
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish the release
+        run: gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"

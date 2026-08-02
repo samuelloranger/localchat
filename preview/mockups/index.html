@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LocalChat — UI mockups</title>
+  <title>LocalChat — screens & icons</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -24,69 +24,88 @@
       --font-h: "Lora", Georgia, serif;
       --font-b: "Raleway", system-ui, sans-serif;
     }
-
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(13, 148, 136, 0.12), transparent 60%),
-        radial-gradient(900px 500px at 90% 0%, rgba(20, 32, 31, 0.06), transparent 55%),
+        radial-gradient(1200px 600px at 10% -10%, rgba(13, 148, 136, 0.14), transparent 60%),
+        radial-gradient(900px 500px at 95% 5%, rgba(20, 32, 31, 0.07), transparent 55%),
         #E8EEEC;
       color: var(--fg);
       font-family: var(--font-b);
       min-height: 100%;
     }
-
-    .page {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 20px 64px;
+    .page { max-width: 1280px; margin: 0 auto; padding: 28px 20px 64px; }
+    .hero { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .brand-row { display: flex; gap: 16px; align-items: center; }
+    .brand-icon {
+      width: 72px; height: 72px; border-radius: 18px;
+      box-shadow: 0 12px 28px rgba(12,18,17,0.18);
+      background: #fff;
+      animation: icon-breath 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
-
-    header.hero {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px 24px;
-      align-items: end;
-      justify-content: space-between;
-      margin-bottom: 28px;
+    @keyframes icon-breath {
+      0%, 100% { box-shadow: 0 12px 28px rgba(12,18,17,0.18), 0 0 0 0 rgba(13,148,136,0); transform: scale(1); }
+      50% { box-shadow: 0 16px 36px rgba(12,18,17,0.22), 0 0 0 10px rgba(13,148,136,0.12); transform: scale(1.02); }
     }
-
-    .brand {
-      font-family: var(--font-h);
-      font-size: 40px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      margin: 0 0 6px;
-    }
-
-    .lede {
-      margin: 0;
-      max-width: 42rem;
-      font-size: 16px;
-      line-height: 1.55;
-      opacity: 0.85;
-    }
-
+    .brand { font-family: var(--font-h); font-size: 36px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.02em; }
+    .lede { margin: 0; max-width: 40rem; font-size: 15px; line-height: 1.55; opacity: 0.85; }
     .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(13, 148, 136, 0.12);
-      color: var(--primary);
-      font-weight: 600;
-      font-size: 13px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(13,148,136,0.12); color: var(--primary);
+      font-weight: 600; font-size: 13px; margin-bottom: 8px;
+    }
+    .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+
+    .section-title {
+      font-family: var(--font-h); font-size: 22px; margin: 8px 0 16px; font-weight: 600;
     }
 
-    .chip::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--primary);
+    .icons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
     }
+    .icon-card {
+      background: rgba(250,250,248,0.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: rise-in 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .icons .icon-card:nth-child(1) { animation-delay: 40ms; }
+    .icons .icon-card:nth-child(2) { animation-delay: 80ms; }
+    .icons .icon-card:nth-child(3) { animation-delay: 120ms; }
+    .icons .icon-card:nth-child(4) { animation-delay: 160ms; }
+    .icons .icon-card:nth-child(5) { animation-delay: 200ms; }
+    .icons .icon-card:nth-child(6) { animation-delay: 240ms; }
+    @keyframes rise-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .icon-card img {
+      width: 96px; height: 96px; object-fit: contain;
+      border-radius: 20px;
+      background:
+        linear-gradient(45deg, #ddd 25%, transparent 25%),
+        linear-gradient(-45deg, #ddd 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ddd 75%),
+        linear-gradient(-45deg, transparent 75%, #ddd 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: #eee;
+    }
+    .icon-card img.solid { background: #0C1211; }
+    .icon-card strong { font-size: 13px; font-weight: 600; }
+    .icon-card span { font-size: 11px; opacity: 0.65; }
 
     .gallery {
       display: grid;
@@ -94,283 +113,134 @@
       gap: 28px;
       align-items: start;
     }
-
+    .shot h2 { margin: 0; font-family: var(--font-h); font-size: 20px; font-weight: 600; }
+    .shot p { margin: 6px 0 12px; font-size: 13px; line-height: 1.45; opacity: 0.72; }
     .shot {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      opacity: 0;
+      transform: translateY(18px) scale(0.985);
+      animation: phone-arrive 640ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .gallery .shot:nth-child(1) { animation-delay: 120ms; }
+    .gallery .shot:nth-child(2) { animation-delay: 200ms; }
+    .gallery .shot:nth-child(3) { animation-delay: 280ms; }
+    .gallery .shot:nth-child(4) { animation-delay: 360ms; }
+    @keyframes phone-arrive {
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .shot h2 {
-      margin: 0;
-      font-family: var(--font-h);
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .shot p {
-      margin: 0;
-      font-size: 13px;
-      line-height: 1.45;
-      opacity: 0.72;
-    }
-
-    /* Phone chrome */
     .phone {
-      width: 100%;
-      max-width: 320px;
-      margin: 0 auto;
-      border-radius: 36px;
-      padding: 12px;
+      width: 100%; max-width: 320px; margin: 0 auto;
+      border-radius: 36px; padding: 12px;
       background: linear-gradient(160deg, #1a2422, #0c1211 40%, #14201f);
-      box-shadow:
-        0 30px 60px rgba(12, 18, 17, 0.28),
-        inset 0 0 0 1px rgba(255,255,255,0.08);
+      box-shadow: 0 30px 60px rgba(12,18,17,0.28), inset 0 0 0 1px rgba(255,255,255,0.08);
     }
-
     .phone-inner {
-      border-radius: 28px;
-      overflow: hidden;
-      background: var(--bg);
-      height: 640px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
+      border-radius: 28px; overflow: hidden; background: var(--bg);
+      height: 660px; display: flex; flex-direction: column; position: relative;
     }
+    .phone.dark .phone-inner { background: var(--bg-dark); color: var(--fg-dark); }
+    .status { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-size: 12px; font-weight: 600; opacity: 0.7; }
+    .nav-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; gap: 8px; }
+    .nav-top h3 { margin: 0; font-family: var(--font-h); font-size: 22px; font-weight: 600; }
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+    .scroll { flex: 1; overflow: hidden; }
 
-    .phone.dark .phone-inner {
-      background: var(--bg-dark);
-      color: var(--fg-dark);
+    .device-line { padding: 0 16px 8px; font-size: 12px; opacity: 0.7; }
+    .filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+    .fchip {
+      min-height: 32px; padding: 0 10px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--muted);
+      font-size: 12px; font-weight: 500; display: grid; place-items: center;
+      transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms ease, color 180ms ease, border-color 180ms ease;
     }
-
-    .status {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 18px 4px;
-      font-size: 12px;
-      font-weight: 600;
-      opacity: 0.7;
-    }
-
-    .nav-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px 12px;
-      gap: 8px;
-    }
-
-    .nav-top h3 {
-      margin: 0;
-      font-family: var(--font-h);
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .icon-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--muted);
-      display: grid;
-      place-items: center;
-      color: var(--fg);
-    }
-
-    .phone.dark .icon-btn {
-      border-color: var(--border-dark);
-      background: var(--muted-dark);
-      color: var(--fg-dark);
-    }
-
-    .content {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .scroll {
-      flex: 1;
-      overflow: hidden;
-      padding: 0 0 8px;
-    }
-
-    .primary-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-      margin: 0 16px 12px;
-      border-radius: var(--radius);
-      background: var(--primary);
-      color: var(--on-primary);
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .row {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      min-height: 56px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .phone.dark .row { border-bottom-color: var(--border-dark); }
-
-    .row strong {
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .row span {
-      font-size: 12px;
-      opacity: 0.65;
-    }
-
-    .empty {
-      padding: 28px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .empty h4 {
-      margin: 0;
-      font-family: var(--font-h);
-      font-size: 24px;
-    }
-
-    .empty p {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.5;
-      opacity: 0.8;
-    }
+    .fchip:active { transform: scale(0.96); }
+    .fchip.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .phone.dark .fchip { border-color: var(--border-dark); background: var(--muted-dark); color: var(--fg-dark); }
+    .phone.dark .fchip.on { background: var(--primary); color: var(--on-primary); }
 
     .search {
-      margin: 0 16px 10px;
-      min-height: 44px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--muted);
-      padding: 10px 14px;
-      font-size: 15px;
-      color: var(--fg);
-      display: flex;
-      align-items: center;
-      opacity: 0.85;
+      margin: 0 16px 8px; min-height: 44px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--muted);
+      padding: 10px 14px; font-size: 14px; display: flex; align-items: center; opacity: 0.9;
     }
+    .phone.dark .search { border-color: var(--border-dark); background: var(--muted-dark); }
 
-    .phone.dark .search {
-      border-color: var(--border-dark);
-      background: var(--muted-dark);
-      color: var(--fg-dark);
-    }
-
-    .section {
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      opacity: 0.7;
-    }
-
+    .section { padding: 6px 16px; font-size: 12px; font-weight: 600; opacity: 0.7; }
     .model-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: center;
+      padding: 11px 16px; border-bottom: 1px solid var(--border);
     }
-
+    .model-row.unfit { opacity: 0.72; }
     .phone.dark .model-row { border-bottom-color: var(--border-dark); }
-
     .model-row .meta { flex: 1; min-width: 0; }
-    .model-row .meta strong {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .model-row .meta span { font-size: 12px; opacity: 0.65; }
-
+    .model-row .meta strong { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .model-row .meta span { font-size: 11px; opacity: 0.65; }
+    .model-row .meta .warn { display: block; font-size: 11px; color: var(--destructive); font-weight: 500; margin-top: 2px; }
     .bar {
-      height: 4px;
+      height: 4px; border-radius: 2px; background: var(--border);
+      margin-top: 8px; overflow: hidden;
+    }
+    .bar > i {
+      display: block; height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--primary), #14b8a6);
       border-radius: 2px;
-      background: var(--border);
-      margin-top: 8px;
+      animation: dl-fill 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    @keyframes dl-fill {
+      0% { width: 8%; }
+      55% { width: 72%; }
+      100% { width: 100%; }
+    }
+    .pill {
+      min-height: 34px; padding: 0 10px; border-radius: 12px;
+      background: var(--primary); color: var(--on-primary);
+      font-size: 12px; font-weight: 500; display: grid; place-items: center; white-space: nowrap;
+      transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease;
+    }
+    .pill:not(.dim):not(.ghost) { animation: pill-ready 2.8s ease-in-out infinite; }
+    @keyframes pill-ready {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.08); }
+    }
+    .pill.dim { opacity: 0.35; }
+    .pill.ghost { background: transparent; color: var(--destructive); border: 1px solid var(--destructive); }
+
+    .primary-btn {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 44px; margin: 0 16px 10px; border-radius: var(--radius);
+      background: var(--primary); color: var(--on-primary); font-weight: 600; font-size: 15px;
+    }
+    .row {
+      padding: 14px 16px; border-bottom: 1px solid var(--border); min-height: 56px;
+      display: flex; flex-direction: column; justify-content: center; gap: 4px;
+    }
+    .phone.dark .row { border-bottom-color: var(--border-dark); }
+    .row strong { font-weight: 600; font-size: 15px; }
+    .row span { font-size: 12px; opacity: 0.65; }
+
+    .messages { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .bubble { max-width: 85%; border-radius: var(--radius); padding: 10px 14px; font-size: 14px; line-height: 1.5; }
+    .bubble.user {
+      align-self: flex-end; background: var(--primary); color: var(--on-primary);
+      animation: bubble-pop 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .bubble.assistant {
+      align-self: flex-start; background: var(--muted); border: 1px solid var(--border); color: var(--fg);
+    }
+    .phone.dark .bubble.assistant { background: var(--muted-dark); border-color: var(--border-dark); color: var(--fg-dark); }
+    /* Focal moment: on-device tokens arrive as a clip reveal, then caret ticks */
+    .bubble.assistant.streaming {
+      position: relative;
       overflow: hidden;
     }
-    .phone.dark .bar { background: var(--border-dark); }
-    .bar > i {
-      display: block;
-      height: 100%;
-      width: 62%;
-      background: var(--primary);
+    .bubble.assistant.streaming .stream-text {
+      display: inline;
+      clip-path: inset(0 100% 0 0);
+      animation: token-reveal 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
     }
-
-    .pill {
-      min-height: 36px;
-      padding: 0 12px;
-      border-radius: 12px;
-      background: var(--primary);
-      color: var(--on-primary);
-      font-size: 13px;
-      font-weight: 500;
-      display: grid;
-      place-items: center;
-      white-space: nowrap;
+    @keyframes token-reveal {
+      to { clip-path: inset(0 0 0 0); }
     }
-
-    .pill.ghost {
-      background: transparent;
-      color: var(--destructive);
-      border: 1px solid var(--destructive);
-    }
-
-    /* Chat */
-    .messages {
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .bubble {
-      max-width: 85%;
-      border-radius: var(--radius);
-      padding: 10px 14px;
-      font-size: 15px;
-      line-height: 1.5;
-      border: 1px solid transparent;
-    }
-
-    .bubble.user {
-      align-self: flex-end;
-      background: var(--primary);
-      color: var(--on-primary);
-    }
-
-    .bubble.assistant {
-      align-self: flex-start;
-      background: var(--muted);
-      border-color: var(--border);
-      color: var(--fg);
-    }
-
-    .phone.dark .bubble.assistant {
-      background: var(--muted-dark);
-      border-color: var(--border-dark);
-      color: var(--fg-dark);
-    }
-
     .bubble .caret {
       display: inline-block;
       width: 7px;
@@ -378,198 +248,226 @@
       margin-left: 2px;
       background: var(--primary);
       vertical-align: text-bottom;
-      animation: blink 1s steps(1) infinite;
+      opacity: 0;
+      animation: caret-on 0.2s ease 2.2s forwards, caret-blink 1s steps(1) 2.4s infinite;
     }
-
-    @keyframes blink {
-      50% { opacity: 0; }
+    @keyframes caret-on { to { opacity: 1; } }
+    @keyframes caret-blink { 50% { opacity: 0; } }
+    @keyframes bubble-pop {
+      from { opacity: 0; transform: translateY(8px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .tab {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      min-height: 48px; justify-content: center; font-size: 11px; font-weight: 500;
+      opacity: 0.55; color: inherit;
+      position: relative;
+    }
+    .tab.active {
+      opacity: 1; color: var(--primary); font-weight: 600;
+    }
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 2px;
+      width: 16px; height: 3px; border-radius: 2px;
+      background: var(--primary);
+      animation: tab-mark 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes tab-mark {
+      from { transform: scaleX(0.2); opacity: 0; }
+      to { transform: scaleX(1); opacity: 1; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .bubble .caret { animation: none; }
+      .brand-icon,
+      .icon-card,
+      .shot,
+      .bubble.user,
+      .bubble.assistant.streaming .stream-text,
+      .bubble .caret,
+      .bar > i,
+      .pill:not(.dim):not(.ghost),
+      .tab.active::after {
+        animation: none !important;
+      }
+      .icon-card, .shot { opacity: 1; transform: none; }
+      .bubble.assistant.streaming .stream-text { clip-path: none; }
+      .bubble .caret { opacity: 1; }
+      .bar > i { width: 62%; }
+      .fchip { transition: none; }
     }
-
     .composer {
-      border-top: 1px solid var(--border);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
-      background: inherit;
+      border-top: 1px solid var(--border); padding: 10px 12px;
+      display: flex; gap: 8px; align-items: flex-end;
     }
-
     .phone.dark .composer { border-top-color: var(--border-dark); }
-
     .composer .field {
-      flex: 1;
-      min-height: 44px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--muted);
-      padding: 10px 12px;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      opacity: 0.9;
+      flex: 1; min-height: 44px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--muted);
+      padding: 10px 12px; font-size: 14px; display: flex; align-items: center;
     }
-
-    .phone.dark .composer .field {
-      border-color: var(--border-dark);
-      background: var(--muted-dark);
-    }
-
+    .phone.dark .composer .field { border-color: var(--border-dark); background: var(--muted-dark); }
     .composer .send {
-      min-width: 64px;
-      min-height: 44px;
-      border-radius: var(--radius);
-      background: var(--primary);
-      color: var(--on-primary);
-      font-weight: 600;
-      font-size: 14px;
-      display: grid;
-      place-items: center;
+      min-width: 64px; min-height: 44px; border-radius: var(--radius);
+      background: var(--primary); color: var(--on-primary); font-weight: 600; font-size: 13px;
+      display: grid; place-items: center;
     }
 
-    .banner {
-      padding: 8px 16px 0;
-      font-size: 12px;
-      opacity: 0.75;
-    }
-
-    .model-chip {
-      max-width: 140px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Settings */
-    .block {
-      padding: 8px 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .block label {
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
+    .block { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .block label { font-weight: 600; font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .choice {
-      min-height: 44px;
-      padding: 0 14px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--muted);
-      display: grid;
-      place-items: center;
-      font-size: 14px;
-      font-weight: 500;
+      min-height: 40px; padding: 0 12px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--muted);
+      display: grid; place-items: center; font-size: 13px; font-weight: 500;
     }
+    .choice.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .privacy { font-size: 13px; line-height: 1.5; opacity: 0.85; }
 
-    .choice.on {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: var(--on-primary);
-    }
-
-    .phone.dark .choice {
-      border-color: var(--border-dark);
-      background: var(--muted-dark);
-      color: var(--fg-dark);
-    }
-
-    .phone.dark .choice.on {
-      background: var(--primary);
-      color: var(--on-primary);
-    }
-
-    .privacy {
-      font-size: 14px;
-      line-height: 1.55;
-      opacity: 0.85;
-    }
-
-    /* Tab bar */
     .tabs {
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr);
       padding: 6px 8px 10px;
-      background: inherit;
     }
-
     .phone.dark .tabs { border-top-color: var(--border-dark); }
-
-    .tab {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      min-height: 48px;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 500;
-      opacity: 0.55;
-      color: inherit;
-    }
-
-    .tab.active {
-      opacity: 1;
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .tab svg { width: 22px; height: 22px; }
-
-    .home {
-      width: 120px;
-      height: 4px;
-      border-radius: 4px;
-      background: rgba(20,32,31,0.2);
-      margin: 6px auto 2px;
-    }
-
+    .tab svg { width: 20px; height: 20px; }
+    .home { width: 120px; height: 4px; border-radius: 4px; background: rgba(20,32,31,0.2); margin: 6px auto 2px; }
     .phone.dark .home { background: rgba(232,238,236,0.25); }
-
-    footer.note {
-      margin-top: 36px;
-      font-size: 13px;
-      opacity: 0.65;
-      line-height: 1.5;
+    .model-chip { max-width: 120px; font-size: 11px; font-weight: 500; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border-dark);
+      background: var(--muted-dark); display: grid; place-items: center; color: var(--fg-dark);
     }
+    footer.note { margin-top: 36px; font-size: 13px; opacity: 0.65; line-height: 1.5; }
   </style>
 </head>
 <body>
   <div class="page">
     <header class="hero">
-      <div>
-        <p class="chip">On-device · no API key · EN/FR</p>
-        <h1 class="brand">LocalChat</h1>
-        <p class="lede">
-          Privacy-first personal assistant. Browse public GGUF models from Hugging Face,
-          download them, and chat fully on-device — teal calm UI, not purple AI chrome.
-        </p>
+      <div class="brand-row">
+        <img class="brand-icon" src="icons/icon.png" alt="LocalChat icon" width="72" height="72" />
+        <div>
+          <p class="chip">Filters · sort · RAM fit · icons</p>
+          <h1 class="brand">LocalChat</h1>
+          <p class="lede">Updated Models browser with device-fit gating, plus the generated bubble-and-keyhole mark.</p>
+        </div>
       </div>
     </header>
 
+    <h2 class="section-title">App icons</h2>
+    <div class="icons">
+      <div class="icon-card">
+        <img src="icons/icon.png" alt="App icon" />
+        <strong>App icon</strong>
+        <span>icon.png · iOS / store</span>
+      </div>
+      <div class="icon-card">
+        <img class="solid" src="icons/logo-512.png" alt="Logo 512" />
+        <strong>Logo 512</strong>
+        <span>logo-512.png · mark only</span>
+      </div>
+      <div class="icon-card">
+        <img src="icons/splash-icon.png" alt="Splash" />
+        <strong>Splash</strong>
+        <span>splash-icon.png</span>
+      </div>
+      <div class="icon-card">
+        <img src="icons/android-icon-foreground.png" alt="Android foreground" />
+        <strong>Android FG</strong>
+        <span>adaptive foreground</span>
+      </div>
+      <div class="icon-card">
+        <img src="icons/android-icon-background.png" alt="Android background" />
+        <strong>Android BG</strong>
+        <span>teal field</span>
+      </div>
+      <div class="icon-card">
+        <img src="icons/favicon.png" alt="Favicon" />
+        <strong>Favicon</strong>
+        <span>favicon.png</span>
+      </div>
+    </div>
+
+    <h2 class="section-title">Screens</h2>
     <div class="gallery">
+      <!-- Models with filters + unfit -->
+      <section class="shot">
+        <h2>Models · browse &amp; fit</h2>
+        <p>Quant / size / sort chips. Unfit rows stay visible but Download is disabled with a RAM reason.</p>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="nav-top"><h3>Models</h3></div>
+            <div class="content">
+              <div class="search">Search models</div>
+              <div class="device-line">This device · 4.0 GB RAM</div>
+              <div class="filters">
+                <div class="fchip">Fits device</div>
+                <div class="fchip on">Q4</div>
+                <div class="fchip">Q5</div>
+                <div class="fchip">Q8</div>
+              </div>
+              <div class="filters">
+                <div class="fchip">&lt; 2 GB</div>
+                <div class="fchip on">Downloads</div>
+                <div class="fchip">Size ↑</div>
+              </div>
+              <div class="scroll">
+                <div class="section">Installed</div>
+                <div class="model-row">
+                  <div class="meta">
+                    <strong>Qwen2.5-0.5B Q4_K_M</strong>
+                    <span>Q4 · 398 MB · ~0.8 GB RAM</span>
+                  </div>
+                  <div class="pill ghost">Delete</div>
+                </div>
+                <div class="section">Available</div>
+                <div class="model-row">
+                  <div class="meta">
+                    <strong>SmolLM2-360M Instruct</strong>
+                    <span>Q4 · 248 MB · ~0.6 GB RAM · downloading</span>
+                    <div class="bar"><i></i></div>
+                  </div>
+                </div>
+                <div class="model-row">
+                  <div class="meta">
+                    <strong>SmolLM2-135M Instruct</strong>
+                    <span>Q4 · 98 MB · ~0.4 GB RAM · 8.1k↓</span>
+                  </div>
+                  <div class="pill">Download</div>
+                </div>
+                <div class="model-row unfit">
+                  <div class="meta">
+                    <strong>Llama-3.2-3B Instruct Q5</strong>
+                    <span>Q5 · 2.4 GB · ~3.5 GB RAM</span>
+                    <span class="warn">Needs ~3.5 GB · this device has 4.0 GB</span>
+                  </div>
+                  <div class="pill dim">Download</div>
+                </div>
+                <div class="model-row unfit">
+                  <div class="meta">
+                    <strong>Qwen2.5-3B Instruct Q8</strong>
+                    <span>Q8 · 3.1 GB · ~4.4 GB RAM</span>
+                    <span class="warn">Needs ~4.4 GB · this device has 4.0 GB</span>
+                  </div>
+                  <div class="pill dim">Download</div>
+                </div>
+              </div>
+              <nav class="tabs">
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chats</div>
+                <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Models</div>
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+              </nav>
+              <div class="home"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Chats -->
       <section class="shot">
-        <div>
-          <h2>Chats</h2>
-          <p>Thread list with New chat. Empty state routes to Models when nothing is installed.</p>
-        </div>
+        <h2>Chats</h2>
+        <p>New chat only enables when a runnable (fitting) model is installed.</p>
         <div class="phone">
           <div class="phone-inner">
             <div class="status"><span>9:41</span><span>●●●</span></div>
@@ -582,18 +480,9 @@
                 <div class="row"><strong>Rewrite this note more clearly</strong><span>Qwen2.5 · Mon</span></div>
               </div>
               <nav class="tabs">
-                <div class="tab active">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Chats
-                </div>
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  Models
-                </div>
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  Settings
-                </div>
+                <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chats</div>
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Models</div>
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
               </nav>
               <div class="home"></div>
             </div>
@@ -601,69 +490,10 @@
         </div>
       </section>
 
-      <!-- Models -->
+      <!-- Chat -->
       <section class="shot">
-        <div>
-          <h2>Models</h2>
-          <p>Curated public GGUFs under ~2&nbsp;GB. Download progress, installed management, offline cache.</p>
-        </div>
-        <div class="phone">
-          <div class="phone-inner">
-            <div class="status"><span>9:41</span><span>●●●</span></div>
-            <div class="nav-top"><h3>Models</h3></div>
-            <div class="content">
-              <div class="search">Search models</div>
-              <div class="scroll">
-                <div class="section">Installed</div>
-                <div class="model-row">
-                  <div class="meta">
-                    <strong>Qwen2.5-0.5B Q4_K_M</strong>
-                    <span>398 MB</span>
-                  </div>
-                  <div class="pill ghost">Delete</div>
-                </div>
-                <div class="section">Available</div>
-                <div class="model-row">
-                  <div class="meta">
-                    <strong>SmolLM2-360M Instruct</strong>
-                    <span>248 MB · downloading</span>
-                    <div class="bar"><i></i></div>
-                  </div>
-                </div>
-                <div class="model-row">
-                  <div class="meta">
-                    <strong>SmolLM2-135M Instruct</strong>
-                    <span>98 MB</span>
-                  </div>
-                  <div class="pill">Download</div>
-                </div>
-              </div>
-              <nav class="tabs">
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Chats
-                </div>
-                <div class="tab active">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  Models
-                </div>
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  Settings
-                </div>
-              </nav>
-              <div class="home"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Chat streaming -->
-      <section class="shot">
-        <div>
-          <h2>Chat</h2>
-          <p>Streaming on-device reply, model chip in the header, Stop during generation.</p>
-        </div>
+        <h2>Chat</h2>
+        <p>On-device streaming with model chip; send blocked if the selected model doesn’t fit RAM.</p>
         <div class="phone dark">
           <div class="phone-inner">
             <div class="status"><span>9:41</span><span>●●●</span></div>
@@ -674,14 +504,12 @@
               <h3 style="font-size:16px;flex:1;text-align:center">Weekend hike</h3>
               <div class="model-chip">Qwen2.5-0.5B</div>
             </div>
-            <div class="banner">Next reply uses Qwen2.5-0.5B</div>
             <div class="content">
               <div class="scroll">
                 <div class="messages">
                   <div class="bubble user">Suggest a one-day hike near Québec City under 12 km.</div>
-                  <div class="bubble assistant">
-                    Try the Sentier des Caps near Saint-Tite-des-Caps — about 10 km round trip with river views. Pack layers; trails can be muddy after rain.
-                    <span class="caret"></span>
+                  <div class="bubble assistant streaming">
+                    <span class="stream-text">Try the Sentier des Caps — about 10 km round trip with river views. Pack layers; trails can be muddy after rain.</span><span class="caret" aria-hidden="true"></span>
                   </div>
                 </div>
               </div>
@@ -697,10 +525,8 @@
 
       <!-- Settings -->
       <section class="shot">
-        <div>
-          <h2>Settings</h2>
-          <p>Appearance, language (system / EN / FR), storage, privacy copy — no accounts.</p>
-        </div>
+        <h2>Settings</h2>
+        <p>Appearance, locale, storage, privacy — no accounts.</p>
         <div class="phone">
           <div class="phone-inner">
             <div class="status"><span>9:41</span><span>●●●</span></div>
@@ -729,24 +555,13 @@
                 </div>
                 <div class="block">
                   <label>About &amp; privacy</label>
-                  <div class="privacy">
-                    Chats and models stay on your device. Hugging Face is only used to download public models. No accounts, no analytics.
-                  </div>
+                  <div class="privacy">Chats and models stay on your device. Hugging Face is only used to download public models.</div>
                 </div>
               </div>
               <nav class="tabs">
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Chats
-                </div>
-                <div class="tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  Models
-                </div>
-                <div class="tab active">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  Settings
-                </div>
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chats</div>
+                <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Models</div>
+                <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
               </nav>
               <div class="home"></div>
             </div>
@@ -756,7 +571,8 @@
     </div>
 
     <footer class="note">
-      Mockups match <code>design-system/MASTER.md</code> (teal #0D9488, Lora + Raleway). Display-only HTML for Tether present — not the live React Native app.
+      Display-only HTML for Tether. Icons copied under <code>preview/mockups/icons/</code> from <code>assets/images/</code>.
+      Mark = speech bubble + keyhole (private / on-device), teal <code>#0D9488</code>.
     </footer>
   </div>
 </body>

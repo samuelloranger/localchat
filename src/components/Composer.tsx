@@ -27,15 +27,22 @@ export function Composer({
   streaming,
 }: Props) {
   const { colors } = useTheme()
+  const inputDisabled = disabled && !streaming
+
   return (
-    <View style={[styles.wrap, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+    <View
+      style={[styles.wrap, { borderTopColor: colors.border, backgroundColor: colors.background }]}
+      accessibilityRole="none"
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.border}
-        editable={!disabled && !streaming}
+        placeholderTextColor={colors.mutedForeground}
+        editable={!inputDisabled && !streaming}
         multiline
+        accessibilityLabel={placeholder}
+        accessibilityState={{ disabled: inputDisabled || streaming }}
         style={[
           styles.input,
           {
@@ -50,6 +57,7 @@ export function Composer({
       {streaming ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={stopLabel}
           onPress={onStop}
           style={[styles.btn, { backgroundColor: colors.destructive, minHeight: 44, minWidth: 44 }]}
         >
@@ -60,6 +68,8 @@ export function Composer({
       ) : (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={sendLabel}
+          accessibilityState={{ disabled: disabled || !value.trim() }}
           disabled={disabled || !value.trim()}
           onPress={onSend}
           style={[
