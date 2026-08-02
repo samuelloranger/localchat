@@ -51,6 +51,7 @@ Expo (RN) · iOS + Android
 - **Network** only for Hugging Face browse/download.
 - **Model files** stored under app documents; metadata in SQLite.
 - **Curated / filtered Hub queries**: GGUF chat models under a soft size cap (default **~2 GB** / prefer ≤~3B-class quants) so typical phones remain usable. Exact allowlist/query strategy is an implementation detail but must exclude obviously desktop-sized files from the default list.
+- **No Hugging Face API key in MVP.** Browse and download use the public Hub HTTP API / `resolve` URLs only. Gated models are out of scope until an optional token setting is added later.
 
 ## UI & navigation
 
