@@ -10,10 +10,12 @@ import {
   useFonts as useRalewayFonts,
 } from '@expo-google-fonts/raleway'
 import { Stack } from 'expo-router'
+import { SQLiteProvider } from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from 'react'
 import 'react-native-reanimated'
 
+import { migrateDbIfNeeded } from '@/src/db/migrate'
 import { ThemeProvider, useTheme } from '@/src/theme/ThemeProvider'
 
 export { ErrorBoundary } from 'expo-router'
@@ -54,7 +56,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <SQLiteProvider databaseName="localchat.db" onInit={migrateDbIfNeeded}>
+        <RootLayoutNav />
+      </SQLiteProvider>
     </ThemeProvider>
   )
 }
