@@ -188,3 +188,35 @@ jobs:
     steps:
       - name: Publish the release
         run: gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"
+
+  # Point AltStore / SideStore at:
+  #   https://raw.githubusercontent.com/samuelloranger/localchat/main/altstore.json
+  #
+  # Runs only after `publish`, never before: the script reads the asset size from
+  # the releases API, and a draft release's assets are not reachable there. A
+  # size that disagrees with the downloaded file makes AltStore refuse the
+  # install outright.
+  altstore:
+    if: github.event_name == 'push'
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The tag push checks out the tag; the manifest is tracked on main and
+          # the commit below has to land there.
+          ref: main
+
+      - name: Sync altstore.json from the release
+        run: scripts/altstore-release.sh "$TAG"
+
+      - name: Commit manifest
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add altstore.json
+          # No-op when a re-run produces an identical manifest.
+          git diff --cached --quiet || git commit -m "altstore: $TAG"
+          git push

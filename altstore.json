@@ -1,0 +1,48 @@
+{
+  "name": "LocalChat",
+  "identifier": "com.samuelloranger.localchat",
+  "subtitle": "Private on-device AI chat",
+  "description": "Chat with open-weight language models running entirely on your phone. Models are downloaded from Hugging Face and run locally with llama.cpp — no account, no API key, no server. Nothing you type leaves the device.",
+  "iconURL": "https://raw.githubusercontent.com/samuelloranger/localchat/main/assets/images/icon.png",
+  "website": "https://github.com/samuelloranger/localchat",
+  "sourceURL": "https://raw.githubusercontent.com/samuelloranger/localchat/main/altstore.json",
+  "apps": [
+    {
+      "name": "LocalChat",
+      "bundleIdentifier": "com.samuelloranger.localchat",
+      "developerName": "Samuel Loranger",
+      "subtitle": "AI chat that never leaves your phone",
+      "localizedDescription": "Privacy-first on-device chat. Browse and download public GGUF models from Hugging Face, then run inference locally with llama.cpp — no account, no API key, no network round-trip once the model is on disk.\n\nThe model browser filters by quantization and file size, and estimates whether a model will actually fit in your device's memory before you spend the bandwidth. Conversations are stored in local SQLite. English and French.\n\nRequires a device with enough free RAM for the model you pick — a 4B model at Q4 needs roughly 3 GB.",
+      "iconURL": "https://raw.githubusercontent.com/samuelloranger/localchat/main/assets/images/icon.png",
+      "tintColor": "#0D9488",
+      "category": "other",
+      "versions": [
+        {
+          "version": "0.0.2",
+          "date": "2026-08-02",
+          "localizedDescription": "Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID.",
+          "downloadURL": "https://github.com/samuelloranger/localchat/releases/download/v0.0.2/localchat.ipa",
+          "size": 17023123,
+          "minOSVersion": "16.4"
+        },
+        {
+          "version": "0.0.1",
+          "date": "2026-08-02",
+          "localizedDescription": "Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID.",
+          "downloadURL": "https://github.com/samuelloranger/localchat/releases/download/v0.0.1/localchat.ipa",
+          "size": 17023106,
+          "minOSVersion": "16.4"
+        },
+        {
+          "version": "0.0.0",
+          "date": "2026-08-02",
+          "localizedDescription": "Sideload builds. The iOS IPA is unsigned — install it with AltStore, SideStore, or Sideloadly, which re-sign with your own Apple ID. The Android APK is debug-keystore signed and is not for distribution.",
+          "downloadURL": "https://github.com/samuelloranger/localchat/releases/download/v0.0.0/localchat.ipa",
+          "size": 17023661,
+          "minOSVersion": "16.4"
+        }
+      ]
+    }
+  ],
+  "userInfo": {}
+}
