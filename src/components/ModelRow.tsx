@@ -13,6 +13,8 @@ type Props = {
   metrics?: string[]
   /** 0–1: estimated runtime memory as a share of what this device can spend. */
   fitRatio?: number | null
+  /** Which metric cell the fit meter is drawn beside. */
+  fitMetricIndex?: number
   accessibilityHint?: string
   progress?: number | null
   primaryLabel: string
@@ -48,6 +50,7 @@ export function ModelRow({
   quant,
   metrics,
   fitRatio,
+  fitMetricIndex = 1,
   accessibilityHint,
   progress,
   primaryLabel,
@@ -115,13 +118,16 @@ export function ModelRow({
                   <View style={[styles.metricDot, { backgroundColor: colors.border }]} />
                 ) : null}
                 <Text style={[styles.metricText, { color: colors.mutedForeground }]}>{metric}</Text>
+                {/* The meter sits against the memory figure it qualifies. As a
+                    full-width rule under the row it was indistinguishable from
+                    the download progress bar — same colour, same position,
+                    same shape — so every row read as mid-download. */}
+                {i === fitMetricIndex && typeof fitRatio === 'number' && !busy ? (
+                  <FitMeter ratio={fitRatio} unfit={!!unfit} />
+                ) : null}
               </View>
             ))}
           </View>
-        ) : null}
-
-        {typeof fitRatio === 'number' && !busy ? (
-          <FitMeter ratio={fitRatio} unfit={!!unfit} />
         ) : null}
 
         {warning ? (
@@ -148,6 +154,7 @@ export function ModelRow({
         ) : null}
 
         {busy ? (
+          <View style={styles.progressRow}>
           <View
             style={[styles.barTrack, { backgroundColor: colors.border }]}
             accessibilityRole="progressbar"
@@ -159,6 +166,10 @@ export function ModelRow({
                 { width: `${Math.round((progress ?? 0) * 100)}%`, backgroundColor: colors.primary },
               ]}
             />
+          </View>
+          <Text style={[styles.progressText, { color: colors.primary }]}>
+            {`${Math.round((progress ?? 0) * 100)}%`}
+          </Text>
           </View>
         ) : null}
       </View>
@@ -214,7 +225,7 @@ export function ModelRow({
  */
 function FitMeter({ ratio, unfit }: { ratio: number; unfit: boolean }) {
   const { colors } = useTheme()
-  const clamped = Math.max(0.02, Math.min(1, ratio))
+  const clamped = Math.max(0.04, Math.min(1, ratio))
   return (
     <View style={[styles.fitTrack, { backgroundColor: colors.border }]}>
       <View
@@ -259,13 +270,17 @@ const styles = StyleSheet.create({
   metricCell: { flexDirection: 'row', alignItems: 'center' },
   metricDot: { width: 2, height: 2, borderRadius: 1, marginHorizontal: 8 },
   metricText: { fontFamily: typography.bodyFamily, fontSize: 12.5 },
-  fitTrack: { height: 3, borderRadius: 2, overflow: 'hidden' },
+  // Short and inline. A full-width rule is the progress bar's shape and must
+  // not be borrowed for anything else.
+  fitTrack: { width: 34, height: 3, borderRadius: 2, overflow: 'hidden', marginLeft: 7 },
   fitFill: { height: 3, borderRadius: 2 },
   warn: { fontFamily: typography.bodyMediumFamily, fontSize: 12, lineHeight: 17 },
   errorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   retry: { minHeight: 44, justifyContent: 'center' },
   retryText: { fontFamily: typography.bodySemiBoldFamily, fontSize: 12 },
-  barTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  barTrack: { flex: 1, height: 4, borderRadius: 2, overflow: 'hidden' },
+  progressText: { fontFamily: typography.bodySemiBoldFamily, fontSize: 11 },
   barFill: { height: 4 },
   actions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   // Icons, not labels: "Télécharger" repeated down the list was the loudest
