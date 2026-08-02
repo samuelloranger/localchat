@@ -428,7 +428,12 @@ export default function ModelsScreen() {
         {t('models.deviceRam', { n: formatGiB(deviceRam), unit: ramUnit })}
       </Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipBar}
+        contentContainerStyle={styles.chips}
+      >
         <Chip label={t('models.fitsDevice')} active={fitsOnly} onPress={() => setFitsOnly((v) => !v)} />
         {QUANT_OPTIONS.map((opt) => (
           <Chip
@@ -590,6 +595,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deviceLine: { paddingHorizontal: 16, marginBottom: 8, fontSize: 13 },
+  // A horizontal ScrollView inside a flex column stretches to fill the leftover
+  // vertical space. flexGrow: 0 pins it to its content height — without it the
+  // chip row centres itself in a full-screen-tall box and pushes the list down.
+  chipBar: { flexGrow: 0, flexShrink: 0 },
   chips: { paddingHorizontal: 16, paddingBottom: 8, gap: 8, alignItems: 'center' },
   chip: {
     borderRadius: 14,
