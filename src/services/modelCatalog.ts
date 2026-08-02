@@ -81,6 +81,27 @@ export function isShardedGguf(filename: string): boolean {
 }
 
 /**
+ * Companion .gguf files that are not language models and cannot be loaded on
+ * their own. They pass every size and quant filter, so without this they show
+ * up as ordinary downloads and produce an install that fails or generates
+ * nothing:
+ *
+ *   mmproj-*      multimodal projector — maps image embeddings into the LM's
+ *                 space. Ships beside a vision model and is a fraction of its
+ *                 size, which makes it look deceptively phone-friendly.
+ *   *lora*, *adapter*
+ *                 fine-tuning deltas, meaningless without their base model.
+ *   *vocab*, *tokenizer*
+ *                 conversion artefacts.
+ */
+const NON_MODEL_GGUF = /(^|\/)(mmproj|mmproj-model)|[-_.](lora|adapter|vocab|tokenizer)[-_.]/i
+
+export function isNonModelGguf(filename: string): boolean {
+  const base = filename.split('/').pop() ?? filename
+  return NON_MODEL_GGUF.test(base)
+}
+
+/**
  * Trim a repo's file list to `limit` entries, keeping the most useful quants
  * rather than the smallest. Ties break on size ascending so the lighter of two
  * equally-good options wins on a phone.

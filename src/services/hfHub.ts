@@ -1,5 +1,6 @@
 import type { HubGgufFile } from '@/src/domain/types'
 import {
+  isNonModelGguf,
   isShardedGguf,
   parseQuantFamily,
   selectRepoFiles,
@@ -64,8 +65,10 @@ export function filterGgufEntries(
         typeof e.path === 'string' &&
         e.path.toLowerCase().endsWith('.gguf') &&
         // A split GGUF piece cannot be loaded on its own; offering one as a
-        // download would always produce a broken install.
+        // download would always produce a broken install. Same for projectors,
+        // LoRA adapters and tokenizer dumps, which are not models at all.
         !isShardedGguf(e.path) &&
+        !isNonModelGguf(e.path) &&
         typeof e.size === 'number' &&
         e.size > 0 &&
         e.size <= maxBytes,

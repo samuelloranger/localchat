@@ -1,6 +1,7 @@
 import { evaluateModelFit } from '../src/services/deviceCapability'
 import {
   applyModelFilters,
+  isNonModelGguf,
   isShardedGguf,
   parseQuantFamily,
   quantPreferenceRank,
@@ -119,4 +120,25 @@ test('selectRepoFiles keeps the useful quants, not the smallest files', () => {
 test('selectRepoFiles tie-breaks equal quants on size ascending', () => {
   const listed = [repoFile('b-Q4_K_M.gguf', 900), repoFile('a-Q4_K_M.gguf', 100)]
   expect(selectRepoFiles(listed, 2)[0].sizeBytes).toBe(100)
+})
+
+// A projector is a fraction of its model's size, so it slips past every size
+// and RAM filter and looks like an unusually light model. Loading one produces
+// no usable context.
+test('isNonModelGguf rejects projectors, adapters and tokenizer dumps', () => {
+  expect(isNonModelGguf('mmproj-Qwen3.5-4B-Uncensored-BF16.gguf')).toBe(true)
+  expect(isNonModelGguf('mmproj-model-f16.gguf')).toBe(true)
+  expect(isNonModelGguf('Qwen3.5-4B-lora-writing.gguf')).toBe(true)
+  expect(isNonModelGguf('model-adapter-v2.gguf')).toBe(true)
+  expect(isNonModelGguf('llama-3.2-vocab.gguf')).toBe(true)
+  expect(isNonModelGguf('model.tokenizer.gguf')).toBe(true)
+})
+
+test('isNonModelGguf keeps real model files', () => {
+  expect(isNonModelGguf('Qwen3.5-4B-Uncensored-Q4_K_M.gguf')).toBe(false)
+  expect(isNonModelGguf('Dolphin3.0-Llama3.2-3B-IQ3_XS.gguf')).toBe(false)
+  // "adapter"/"lora" only count as separators-delimited tokens, so a model
+  // whose name merely contains the letters is not dropped.
+  expect(isNonModelGguf('Adaptive-Reasoner-3B-Q4_K_M.gguf')).toBe(false)
+  expect(isNonModelGguf('Explorator-7B-Q4_K_M.gguf')).toBe(false)
 })
