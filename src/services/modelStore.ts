@@ -83,7 +83,79 @@ export function isLegacyAbsolutePath(stored: string): boolean {
   return stored.includes('/')
 }
 
+/**
+ * Rebuild a model id from a file on disk.
+ *
+ * modelFileName sanitises the id, so the mapping is lossy — every run of
+ * unsafe characters collapses to "__" and the original separators cannot be
+ * recovered with certainty. That is fine: the id only has to be stable and to
+ * round-trip back to the same file name, and a stem that is already sanitised
+ * does exactly that. `__` is read back as `/` for the display fields, which is
+ * what it means in practice since ids are built as repo/filename.
+ */
+export function adoptOrphanFile(fileName: string, sizeBytes: number, now: number): InstalledModel {
+  // modelFileName appends .gguf to an id that already ends in .gguf, so files
+  // on disk carry a doubled extension. Strip only the one this function added.
+  const stem = fileName.replace(/\.gguf$/i, '')
+  const guessed = stem.replace(/__/g, '/')
+  const named = /\.gguf$/i.test(guessed) ? guessed : `${guessed}.gguf`
+  const slash = named.lastIndexOf('/')
+  return {
+    id: stem,
+    repoId: slash > 0 ? named.slice(0, slash) : named,
+    filename: slash > 0 ? named.slice(slash + 1) : named,
+    displayName: named,
+    sizeBytes,
+    localPath: `${modelsDirectory()}${fileName}`,
+    downloadedAt: now,
+    lastUsedAt: null,
+  }
+}
+
+/**
+ * Re-adopt .gguf files sitting in the models directory with no row pointing at
+ * them.
+ *
+ * Builds released before local_path was stored relative pruned their own rows
+ * on first launch after an update, leaving the downloaded file behind with
+ * nothing referencing it — invisible in the app and impossible to delete from
+ * it, while still occupying gigabytes. This recovers those, and any future file
+ * orphaned by a database loss.
+ *
+ * The reconstructed record is best-effort for the display fields; sizeBytes is
+ * read from the file, so it is more accurate than the Hub's reported value.
+ */
+export async function recoverOrphanModels(db: SQLiteDatabase): Promise<number> {
+  const dir = modelsDirectory()
+  const dirInfo = await FileSystem.getInfoAsync(dir)
+  if (!dirInfo.exists) return 0
+
+  let entries: string[]
+  try {
+    entries = await FileSystem.readDirectoryAsync(dir)
+  } catch {
+    return 0
+  }
+
+  const known = await db.getAllAsync<{ local_path: string }>('SELECT local_path FROM models')
+  const claimed = new Set(known.map((r) => r.local_path.split('/').pop()))
+
+  let adopted = 0
+  for (const name of entries) {
+    if (!name.toLowerCase().endsWith('.gguf') || claimed.has(name)) continue
+    const info = await FileSystem.getInfoAsync(`${dir}${name}`)
+    if (!info.exists) continue
+    const size = 'size' in info ? Number(info.size ?? 0) : 0
+    if (size <= 0) continue
+    await recordInstalled(db, adoptOrphanFile(name, size, Date.now()))
+    adopted += 1
+  }
+  return adopted
+}
+
 export async function listInstalled(db: SQLiteDatabase): Promise<InstalledModel[]> {
+  await recoverOrphanModels(db)
+
   const rows = await db.getAllAsync<ModelRow>(
     `SELECT id, repo_id, filename, display_name, size_bytes, local_path, downloaded_at, last_used_at
      FROM models
@@ -199,6 +271,14 @@ export async function installFromHub(
     downloadedAt: Date.now(),
     lastUsedAt: null,
   }
+  // The adopted-orphan id and the Hub id are different strings that sanitise to
+  // the same file name, so drop any row already claiming this file before
+  // inserting — otherwise two rows end up pointing at one download.
+  await db.runAsync(
+    `DELETE FROM models WHERE local_path = ? AND id != ?`,
+    modelFileName(id),
+    id,
+  )
   await recordInstalled(db, model)
   return model
 }

@@ -1,7 +1,9 @@
 import { migrateDbIfNeeded } from '../src/db/migrate'
 import { openMemoryDatabase } from './helpers/memoryDb'
 
-const mockGetInfoAsync = jest.fn(async (_path: string) => ({ exists: false }))
+type MockInfo = { exists: boolean; size?: number }
+const mockGetInfoAsync = jest.fn(async (_path: string): Promise<MockInfo> => ({ exists: false }))
+const mockReadDirectoryAsync = jest.fn(async (_path: string) => [] as string[])
 
 jest.mock('llama.rn', () => ({
   initLlama: jest.fn(),
@@ -12,6 +14,7 @@ jest.mock('expo-file-system/legacy', () => ({
   deleteAsync: jest.fn(async () => undefined),
   getInfoAsync: (path: string) => mockGetInfoAsync(path),
   makeDirectoryAsync: jest.fn(async () => undefined),
+  readDirectoryAsync: (path: string) => mockReadDirectoryAsync(path),
   moveAsync: jest.fn(async () => undefined),
   createDownloadResumable: jest.fn(),
 }))
@@ -24,6 +27,8 @@ import * as modelStore from '../src/services/modelStore'
 
 beforeEach(() => {
   mockGetInfoAsync.mockReset()
+  mockReadDirectoryAsync.mockReset()
+  mockReadDirectoryAsync.mockResolvedValue([])
 })
 
 test('recordInstalled and listInstalled round-trip existing files only', async () => {
@@ -159,4 +164,65 @@ test('a file that is really gone is still pruned', async () => {
   })
 
   expect(await modelStore.listInstalled(db)).toHaveLength(0)
+})
+
+// Builds released before local_path was stored relative deleted their own rows
+// on the first launch after an update, leaving the file on disk with nothing
+// referencing it: invisible in the app, undeletable from it, still occupying
+// gigabytes.
+test('re-adopts a .gguf file that no row points at', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+
+  const name = modelStore.modelFileName('org/repo/model-Q4_K_M.gguf')
+  mockReadDirectoryAsync.mockResolvedValue([name])
+  mockGetInfoAsync.mockResolvedValue({ exists: true, size: 2_100_000_000 })
+
+  const list = await modelStore.listInstalled(db)
+  expect(list).toHaveLength(1)
+  expect(list[0].localPath).toBe(`${modelStore.modelsDirectory()}${name}`)
+  // Read from disk, so more accurate than whatever the Hub reported.
+  expect(list[0].sizeBytes).toBe(2_100_000_000)
+})
+
+test('adoption round-trips back to the same file name', () => {
+  const name = modelStore.modelFileName('org/repo/model-Q4_K_M.gguf')
+  const adopted = modelStore.adoptOrphanFile(name, 10, 1)
+  expect(modelStore.modelFileName(adopted.id)).toBe(name)
+})
+
+test('adoption reconstructs a display name the UI can shorten', () => {
+  const name = modelStore.modelFileName('Repo-GGUF/Model-3B-Q4_K_M.gguf')
+  const adopted = modelStore.adoptOrphanFile(name, 10, 1)
+  expect(adopted.displayName).toBe('Repo-GGUF/Model-3B-Q4_K_M.gguf')
+  expect(adopted.repoId).toBe('Repo-GGUF')
+})
+
+test('does not adopt a file a row already claims', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+  mockGetInfoAsync.mockResolvedValue({ exists: true, size: 10 })
+
+  await modelStore.recordInstalled(db, {
+    id: 'org/repo/model.gguf',
+    repoId: 'org/repo',
+    filename: 'model.gguf',
+    displayName: 'org/repo/model.gguf',
+    sizeBytes: 10,
+    localPath: modelStore.modelFilePath('org/repo/model.gguf'),
+    downloadedAt: 1,
+    lastUsedAt: null,
+  })
+  mockReadDirectoryAsync.mockResolvedValue([modelStore.modelFileName('org/repo/model.gguf')])
+
+  expect(await modelStore.listInstalled(db)).toHaveLength(1)
+})
+
+test('ignores non-gguf entries and zero-byte files', async () => {
+  const db = await openMemoryDatabase()
+  await migrateDbIfNeeded(db)
+  mockReadDirectoryAsync.mockResolvedValue(['notes.txt', 'model.gguf.partial', 'empty.gguf'])
+  mockGetInfoAsync.mockResolvedValue({ exists: true, size: 0 })
+
+  expect(await modelStore.recoverOrphanModels(db)).toBe(0)
 })
