@@ -1,0 +1,53 @@
+{
+  "name": "localchat",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "dependencies": {
+    "@expo-google-fonts/lora": "^0.4.2",
+    "@expo-google-fonts/raleway": "^0.4.2",
+    "expo": "~57.0.9",
+    "expo-build-properties": "^57.0.8",
+    "expo-constants": "~57.0.8",
+    "expo-file-system": "^57.0.1",
+    "expo-font": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-localization": "^57.0.1",
+    "expo-router": "~57.0.9",
+    "expo-splash-screen": "~57.0.5",
+    "expo-sqlite": "^57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "expo-symbols": "~57.0.1",
+    "expo-web-browser": "~57.0.2",
+    "i18n-js": "^4.5.3",
+    "llama.rn": "^0.12.8",
+    "lucide-react-native": "^1.28.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "^15.15.5",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "29.5.14",
+    "@types/react": "~19.2.2",
+    "jest": "29.7.0",
+    "jest-expo": "^57.0.3",
+    "react-test-renderer": "^19.2.8",
+    "ts-jest": "^29.4.12",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "private": true
+}
